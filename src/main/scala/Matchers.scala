@@ -12,55 +12,41 @@ class Matchers[Input <: Reader] {
     val next: Input
 
     def map[S]( f: R => S ): MatcherResult[S]
-
-    def flatMapWithNext[S]( f: R => Input => MatcherResult[S] ): MatcherResult[S]
-
-    def append[S >: R]( a: => MatcherResult[S] ): MatcherResult[S]
   }
 
   case class Match[R]( result: R, next: Input ) extends MatcherResult[R] {
     def map[S]( f: R => S ) = Match( f(result), next )
-
-    def flatMapWithNext[S]( f: R => Input => MatcherResult[S] ) = f(result)(next)
-
-    def append[S >: R]( a: => MatcherResult[S] ) = this
   }
 
   case class Mismatch( next: Input ) extends MatcherResult {
     def map[S]( f: Nothing => S ) = this
-
-    def flatMapWithNext[S]( f: Nothing => Input => MatcherResult[S] ) = this
-
-    def append[U >: Nothing]( alt: => MatcherResult[U] ): MatcherResult[U] =
-      alt match {
-        case Match( _, _ ) => alt
-        case Mismatch( _ ) => if (alt.next before next) this else alt
-      }
   }
 
   abstract class Matcher[+R] extends (Input => MatcherResult[R]) {
 
     def map[S]( f: R => S ): Matcher[S] = this( _ ) map f
 
-    def flatMap[S]( f: R => Matcher[S] ): Matcher[S] = this( _ ) flatMapWithNext f
-
-    def append[S >: R]( m0: => Matcher[S]): Matcher[S] = { lazy val m = m0
-      r => this( r ) append m( r )
+    def ~ [S]( m: => Matcher[S] ): Matcher[R ~ S] = { in =>
+      this( in ) match {
+        case Match( a, in1 ) =>
+          m( in1 ) match {
+            case Match( b, in2 ) => Match( new ~(a, b), in2 )
+            case f => f.asInstanceOf[Mismatch]
+          }
+        case f => f.asInstanceOf[Mismatch]
+      }
     }
 
-    def ~ [S]( m0: => Matcher[S] ) = { lazy val m = m0
-      for (a <- this; b <- m) yield new ~(a, b)
-    }
+    def <~ [S]( m: => Matcher[S] ) = (this ~ m) ^^ { case a ~ _ => a }
 
-    def <~ [S]( m0: => Matcher[S] ) = { lazy val m = m0
-      for (a <- this; _ <- m) yield a
-    }
+    def ~> [S]( m: => Matcher[S] ) = (this ~ m) ^^ { case _ ~ b => b }
 
-    def ~> [S]( m0: => Matcher[S] ) = { lazy val m = m0
-      for (_ <- this; b <- m) yield b
+    def | [S >: R]( q: => Matcher[S] ): Matcher[S] = { in =>
+      this( in ) match {
+        case res: Match[R] => res
+        case _ => q( in )
+      }
     }
-
-    def | [S >: R]( q: => Matcher[S] ) = append( q )
 
     def ^^ [S]( f: R => S ) = map( f )
 
