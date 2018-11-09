@@ -99,7 +99,7 @@ class Matchers[Input <: Reader] {
         case Match( v, r ) =>
           buf += v
           rep( r )
-        case Mismatch( r ) => Match( buf.toList, r )
+        case Mismatch( _ ) => Match( buf.toList, in1 )
       }
 
       rep( in )
@@ -120,6 +120,13 @@ class Matchers[Input <: Reader] {
       case f => f
     }
   }
+
+  def eoi: Matcher[Unit] =
+    in =>
+      if (in.eoi)
+        Match( (), in )
+      else
+        Mismatch( in )
 
   def succeed[R]( r: R ): Matcher[R] = Match( r, _ )
 
