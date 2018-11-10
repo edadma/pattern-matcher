@@ -4,13 +4,33 @@ package xyz.hyperreal.matcher
 import scala.collection.mutable.{HashMap, ListBuffer}
 
 
+/**
+  * Provides methods for coding grammars.
+  *
+  * @tparam Input the type of [[Reader]] that will be used
+  */
 class Matchers[Input <: Reader] {
 
   private val groupmap = new HashMap[String, (Input, Input)]
 
+  /**
+    * Abstract class for [[Matcher]] results
+    *
+    * @tparam R type of result value
+    */
   abstract class MatcherResult[+R] {
+    /**
+      * Input object containing next character of input.
+      */
     val next: Input
 
+    /**
+      * Applies of function to matcher result value.
+      *
+      * @param f funciton to be applied to result value
+      * @tparam S type of new result value
+      * @return new matcher result
+      */
     def map[S]( f: R => S ): MatcherResult[S]
   }
 
