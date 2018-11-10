@@ -4,6 +4,8 @@ package xyz.hyperreal.matcher
 
 abstract class Reader {
 
+  def soi: Boolean
+
   def eoi: Boolean
 
   def more = !eoi
@@ -11,6 +13,10 @@ abstract class Reader {
   def ch: Char
 
   def next: Reader
+
+  def lookbehind: Char
+
+  def prev: Reader
 
   def line: Int
 
@@ -36,6 +42,8 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 
   private def problem = sys.error( s"end of input: [$line, $col]" )
 
+  override lazy val soi: Boolean = idx == 0
+
   override lazy val eoi: Boolean = idx == s.length
 
   override lazy val ch: Char =
@@ -51,6 +59,20 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
       new StringReader( s, idx + 1, line + 1, 1 )
     else
       new StringReader( s, idx + 1, line, col + 1 )
+
+  lazy val lookbehind =
+    if (soi)
+      problem
+    else
+      s( idx - 1 )
+
+  override lazy val prev =
+    if (soi)
+      problem
+    else if (lookbehind == '\n')
+      new StringReader( s, idx - 1, line - 1, 1 )
+    else
+      new StringReader( s, idx - 1, line, col - 1 )
 
   def substring( end: Reader ) = s.substring( idx, end.asInstanceOf[StringReader].idx )
 

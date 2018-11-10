@@ -20,7 +20,7 @@ class Matchers[Input <: Reader] {
     */
   abstract class MatcherResult[+R] {
     /**
-      * Input object containing next character of input.
+      * Next character of input.
       */
     val next: Input
 
@@ -34,18 +34,49 @@ class Matchers[Input <: Reader] {
     def map[S]( f: R => S ): MatcherResult[S]
   }
 
+  /**
+    * Represents a successful match.
+    *
+    * @param result result value of the match
+    * @param next next character of input
+    * @tparam R type of result value
+    */
   case class Match[R]( result: R, next: Input ) extends MatcherResult[R] {
     def map[S]( f: R => S ) = Match( f(result), next )
   }
 
+  /**
+    * Represents an unsuccessful match.
+    *
+    * @param next character at which the mismatch occurred
+    */
   case class Mismatch( next: Input ) extends MatcherResult {
     def map[S]( f: Nothing => S ) = this
   }
 
+  /**
+    * Abstract matcher.  A matcher is a function that maps character input to a result value.
+    *
+    * @tparam R type of result value
+    */
   abstract class Matcher[+R] extends (Input => MatcherResult[R]) {
 
+    /**
+      * Returns a new matcher whose result value is transformed by a function.
+      *
+      * @param f function applied to the result value of this matcher
+      * @tparam S type of the result value of the matcher being returned
+      * @return a new matcher with a mapped result value
+      */
     def map[S]( f: R => S ): Matcher[S] = this( _ ) map f
 
+    /**
+      * Returns a matcher that applies this matcher and another one sequentially and whose result value is a tuple containing the result values of the two matchers.
+      *
+      * @param m the second matcher to be applied only if this matcher succeeds
+      * @tparam S the type of the result value of the second matcher
+      * @return the new sequential matcher
+      */
     def ~ [S]( m: => Matcher[S] ): Matcher[R ~ S] = { in =>
       this( in ) match {
         case Match( a, in1 ) =>
@@ -57,14 +88,35 @@ class Matchers[Input <: Reader] {
       }
     }
 
+    /**
+      * Returns a matcher that applies this matcher and another one sequentially and whose result value is that of this matcher.
+      *
+      * @param m the second matcher
+      * @tparam S the type of the result value of the second matcher
+      * @return the new matcher
+      */
     def <~ [S]( m: => Matcher[S] ) = (this ~ m) ^^ { case a ~ _ => a }
 
+    /**
+      * Returns a matcher that applies this matcher and another one sequentially and whose result value is that of the second matcher.
+      *
+      * @param m the second matcher
+      * @tparam S the type of the result value of the second matcher
+      * @return the new matcher
+      */
     def ~> [S]( m: => Matcher[S] ) = (this ~ m) ^^ { case _ ~ b => b }
 
-    def | [S >: R]( q: => Matcher[S] ): Matcher[S] = { in =>
+    /**
+      * Returns a matcher that applies this matcher or alternatively another matcher if this matcher fails.
+      *
+      * @param m the alternate matcher
+      * @tparam S the type of the result value of the alternate
+      * @return the new matcher
+      */
+    def | [S >: R]( m: => Matcher[S] ): Matcher[S] = { in =>
       this( in ) match {
         case res: Match[R] => res
-        case _ => q( in )
+        case _ => m( in )
       }
     }
 
@@ -86,6 +138,15 @@ class Matchers[Input <: Reader] {
         groupmap(name) = (start, next)
         res
       case res => res
+    }
+  }
+
+  def matched[S]( name: String, m: => Matcher[S] ): Matcher[(Input, Input)] = { in =>
+    val start = in
+
+    m( in ) match {
+      case Match( _, next ) => Match( (start, next), next )
+      case res => res.asInstanceOf[Mismatch]
     }
   }
 
@@ -126,6 +187,13 @@ class Matchers[Input <: Reader] {
       case f => f
     }
   }
+
+  def soi: Matcher[Unit] =
+    in =>
+      if (in.soi)
+        Match( (), in )
+      else
+        Mismatch( in )
 
   def eoi: Matcher[Unit] =
     in =>
@@ -177,5 +245,16 @@ class Matchers[Input <: Reader] {
   def digit: Matcher[Char] = cls( _.isDigit )
 
   def space: Matcher[Char] = cls( _.isSpaceChar )
+
+  def lookbehind( pred: Char => Boolean ): Matcher[Char] = { in =>
+    if (!in.soi && pred( in.lookbehind ))
+      Match( in.lookbehind, in )
+    else
+      Mismatch( in )
+  }
+
+//  def boundary( start: Boolean, predb: Char => Boolean,
+//                end: Boolean, predf: Char => Boolean ) =
+//    (lookbehind( predb ) | (if (start) soi else fail)) ~ guard(cls(predf) | (if (end) eoi else fail))
 
 }
