@@ -141,7 +141,7 @@ class Matchers[Input <: Reader] {
     }
   }
 
-  def matched[S]( name: String, m: => Matcher[S] ): Matcher[(Input, Input)] = { in =>
+  def matched[S]( m: => Matcher[S] ): Matcher[(Input, Input)] = { in =>
     val start = in
 
     m( in ) match {
@@ -149,6 +149,8 @@ class Matchers[Input <: Reader] {
       case res => res.asInstanceOf[Mismatch]
     }
   }
+
+  def matchedString[S]( m: => Matcher[S] ) = matched(m) ^^ { case (s, e) => s substring e }
 
   def group( name: String ) = groupmap get name
 
@@ -171,6 +173,10 @@ class Matchers[Input <: Reader] {
 
       rep( in )
   }
+
+  def anyOf( cs: Char* ) = cls( cs contains _ )
+
+  def noneOf( cs: Char* ) = cls( !cs.contains(_) )
 
   def opt[S]( m: => Matcher[S] ) = m ^^ (Some( _ )) | succeed( None )
 
