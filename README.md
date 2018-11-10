@@ -1,7 +1,7 @@
 Matcher
 =======
 
-*`matcher`* is a small combinator parsing library written in Scala mainly for instructional purposes. For serious parsing needs, it is recommended to use Scala'a `scala-parser-combinators` library.
+*`matcher`* is a small combinator parsing library written in Scala mainly for tutorial purposes. For serious parsing needs, it is recommended to use Scala'a `scala-parser-combinators` library.
 
 
 Example
