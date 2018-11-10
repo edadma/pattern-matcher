@@ -1,7 +1,7 @@
-package xyz.hyperreal.matcher
+import xyz.hyperreal.matcher._
 
 
-object Main extends App {
+object Example extends App {
 
   val matcher =
     new Matchers[StringReader] {
