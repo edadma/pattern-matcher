@@ -5,11 +5,11 @@ object Example extends App {
 
   val matcher =
     new Matchers[StringReader] {
-      def ws = rep( space )
+      def ws = rep(space)
 
       def t[S]( m: => Matcher[S] ) = m <~ ws
 
-      def number = t(rep1( digit )) ^^ (_.mkString.toInt)
+      def number = t(rep1(digit)) ^^ (_.mkString.toInt)
 
       def additive: Matcher[(Int, Int) => Int] = t("+" | "-") ^^ {
         case "+" => _ + _
