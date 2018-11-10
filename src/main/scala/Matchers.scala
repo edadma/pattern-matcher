@@ -58,7 +58,7 @@ class Matchers[Input <: Reader] {
 
   def clear = groupmap.clear
 
-  def capture[S]( name: String, m0: => Matcher[S] ): Matcher[S] = { in => lazy val m = m0
+  def capture[S]( name: String, m: => Matcher[S] ): Matcher[S] = { in =>
     val start = in
 
     m( in ) match {

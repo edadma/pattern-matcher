@@ -7,22 +7,21 @@ object Main extends App {
     new Matchers[StringReader] {
       def ws = rep( space )
 
-      def t( s: String ) = s <~ ws
+      def t[S]( m: => Matcher[S] ) = m <~ ws
 
-      def number = (rep1( digit ) <~ ws) ^^ (_.mkString.toInt)
+      def number = t(rep1( digit )) ^^ (_.mkString.toInt)
 
-      def additive: Matcher[(Int, Int) => Int] = (t("+") | t("-")) ^^ {
+      def additive: Matcher[(Int, Int) => Int] = t("+" | "-") ^^ {
         case "+" => _ + _
         case "-" => _ - _
       }
 
-      def sign: Matcher[Int => Int] = opt(("+" | "-") <~ ws) ^^ {
-        case None => a => a
-        case Some( "+" ) => a => a
+      def sign: Matcher[Int => Int] = opt(t("+" | "-")) ^^ {
+        case None | Some( "+" ) => a => a
         case Some( "-" ) => a => -a
       }
 
-      def multiplicative: Matcher[(Int, Int) => Int] = (("*" | "/") <~ ws) ^^ {
+      def multiplicative: Matcher[(Int, Int) => Int] = t("*" | "/") ^^ {
         case "*" => _ * _
         case "/" => _ / _
       }
@@ -43,7 +42,7 @@ object Main extends App {
         case number ~ list => (number /: list) { case (x, f ~ y) => f( x, y ) }
       }
 
-      def input = expression <~ eoi
+      def input = ws ~> expression <~ eoi
     }
 
   println( matcher.input(new StringReader("3 + 4 * 5")) )
