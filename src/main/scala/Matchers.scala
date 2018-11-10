@@ -174,10 +174,29 @@ class Matchers[Input <: Reader] {
       rep( in )
   }
 
+  /**
+    * Returns a matcher that will match any of a list of characters.
+    *
+    * @param cs argument list of characters
+    * @return a matcher that only matches a character from a list
+    */
   def anyOf( cs: Char* ) = cls( cs contains _ )
 
+  /**
+    * Returns a matcher that will matcher any character not in a list of characters.
+    *
+    * @param cs argument list of characters
+    * @return a matcher that only matches a character not on a list
+    */
   def noneOf( cs: Char* ) = cls( !cs.contains(_) )
 
+  /**
+    * Returns a matcher that allows a matcher to succeed optionally.
+    *
+    * @param m the matcher to apply to the input.
+    * @tparam S the type of the optional result value
+    * @return a matcher with an optional result value
+    */
   def opt[S]( m: => Matcher[S] ) = m ^^ (Some( _ )) | succeed( None )
 
   def not[S]( m: Matcher[S] ): Matcher[Unit] = { in =>

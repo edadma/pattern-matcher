@@ -18,7 +18,7 @@ object Example /*extends App*/ {
 
       def sign: Matcher[Int => Int] = opt(t("+" | "-")) ^^ {
         case None | Some( "+" ) => a => a
-        case Some( "-" ) => a => -a
+        case Some( "-" ) => -_
       }
 
       def multiplicative: Matcher[(Int, Int) => Int] = t("*" | "/") ^^ {

@@ -5,8 +5,7 @@ object Main extends App {
 
   val matcher =
     new Matchers[StringReader] {
-
-      def input = '[' ~> matchedString(rep(noneOf(']'))) <~ ']'
+      def input = '[' ~> matchedString(rep(letter)) <~ ']'
     }
 
   println( matcher.input(new StringReader("[asdf]")) )

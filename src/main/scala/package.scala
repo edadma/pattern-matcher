@@ -1,7 +1,7 @@
 package xyz.hyperreal
 
 /**
-  * Provides a class for creating a parser or string pattern matcher.
+  * Provides a classes for creating string pattern matchers using parser combinators.
   */
 package object matcher {
 
