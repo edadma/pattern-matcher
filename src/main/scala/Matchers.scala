@@ -5,7 +5,7 @@ import scala.collection.mutable.{HashMap, ListBuffer}
 
 
 /**
-  * Provides methods for coding grammars.
+  * Provides methods for coding character pattern matchers.
   *
   * @tparam Input the type of [[Reader]] that will be used
   */
@@ -199,6 +199,13 @@ class Matchers[Input <: Reader] {
     */
   def opt[S]( m: => Matcher[S] ) = m ^^ (Some( _ )) | succeed( None )
 
+  /**
+    * Returns a matcher that negates the result of the given matcher. No input is consumed.
+    *
+    * @param m the matcher whose result is negated
+    * @tparam S the type of the result value of the given matcher
+    * @return the new matcher
+    */
   def not[S]( m: Matcher[S] ): Matcher[Unit] = { in =>
     m( in ) match {
       case Match( _, _ ) => Mismatch( in )
@@ -206,6 +213,13 @@ class Matchers[Input <: Reader] {
     }
   }
 
+  /**
+    * Returns a matcher whose result is the same as the given matcher, but without consuming any input.
+    *
+    * @param m the given matcher
+    * @tparam S the type of the result value
+    * @return the new matcher
+    */
   def guard[S]( m: => Matcher[S] ): Matcher[S] = { in =>
     m( in ) match {
       case Match( r, _ ) => Match( r, in )
@@ -213,6 +227,11 @@ class Matchers[Input <: Reader] {
     }
   }
 
+  /**
+    * Returns a zero-length matcher that succeeds at the start of input.
+    *
+    * @return a matcher that succeeds at the start of input, fails otherwise.
+    */
   def soi: Matcher[Unit] =
     in =>
       if (in.soi)
@@ -220,6 +239,11 @@ class Matchers[Input <: Reader] {
       else
         Mismatch( in )
 
+  /**
+    * Returns a zero-length matcher that succeeds at the end of input.
+    *
+    * @return a matcher that succeeds at the end of input, fails otherwise.
+    */
   def eoi: Matcher[Unit] =
     in =>
       if (in.eoi)
@@ -227,10 +251,28 @@ class Matchers[Input <: Reader] {
       else
         Mismatch( in )
 
-  def succeed[R]( r: R ): Matcher[R] = Match( r, _ )
+  /**
+    * Returns a matcher that always succeeds.
+    *
+    * @param r the result value
+    * @tparam R the type of result value
+    * @return a matcher that always succeeds with a result value
+    */
+  def succeed[R]( r: => R ): Matcher[R] = Match( r, _ )
 
+  /**
+    * Returns a matcher that always fails.
+    *
+    * @return a matcher that always fails with a result containing the current point in the input stream
+    */
   def fail: Matcher[Nothing] = Mismatch( _ )
 
+  /**
+    * Returns a matcher that matches the current input character if it is a member of a class of characters.
+    *
+    * @param pred predicate that determines if the current input character matches
+    * @return a matcher for matching character classes
+    */
   def cls( pred: Char => Boolean ): Matcher[Char] = { in =>
     if (in.more && pred( in.ch ))
       Match( in.ch, in.next.asInstanceOf[Input] )
@@ -238,8 +280,39 @@ class Matchers[Input <: Reader] {
       Mismatch( in )
   }
 
+  /**
+    * Returns a matcher that always succeeds as long as there is input remaining.
+    *
+    * @return a matcher with the next input character as its result value, failing if there is no more input
+    */
+  def char = cls( _ => true )
+
+  /**
+    * Returns a matcher for a specific character. This combinator is an implicit function to that character literals can be lifted to the corresponding character matcher.
+    *
+    * For example
+    *
+    * {{{
+    *   def stringLit: Matcher[List[Char]] = '"' ~> rep(noneOf('"')) <~ '"'
+    * }}}
+    *
+    * @param c the character to be matched
+    * @return the character matcher
+    */
   implicit def ch( c: Char ): Matcher[Char] = cls( _ == c )
 
+  /**
+    * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
+    *
+    * For example
+    *
+    * {{{
+    *   def bracketed: Matcher[List[Char]] = "[[" ~> rep(not("]]") ~> char) <~ "]]"
+    * }}}
+    *
+    * @param s the string to match
+    * @return a matcher that matches against a string, with that string as its result value if it succeeds
+    */
   implicit def str( s: String ): Matcher[String] = { in =>
     def str( idx: Int, in1: Input ): MatcherResult[String] =
       if (idx < s.length)
@@ -253,24 +326,58 @@ class Matchers[Input <: Reader] {
     str( 0, in )
   }
 
+  /**
+    * Case class for return sequence matcher results that can be pattern matched.
+    *
+    * @param a left result value
+    * @param b right result value
+    * @tparam A type of left result value
+    * @tparam B type of right result value
+    */
   case class ~[+A, +B]( a: A, b: B )
 
   private val HEXDIGITSET = ('a' to 'f') ++ ('A' to 'F') ++ ('0' to '9') toSet
 
+  /**
+    * Returns a hex digit character matcher.
+    */
   def hexdigit: Matcher[Char] = cls( HEXDIGITSET )
 
+  /**
+    * Returns a letter or digit character matcher.
+    */
   def letterOrDigit: Matcher[Char] = cls( _.isLetterOrDigit )
 
+  /**
+    * Returns a letter character matcher.
+    */
   def letter: Matcher[Char] = cls( _.isLetter )
 
+  /**
+    * Returns a lower case character matcher.
+    */
   def lower: Matcher[Char] = cls( _.isLower )
 
+  /**
+    * Returns an upper case character matcher.
+    */
   def upper: Matcher[Char] = cls( _.isUpper )
 
+  /**
+    * Returns a digit character matcher.
+    */
   def digit: Matcher[Char] = cls( _.isDigit )
 
+  /**
+    * Returns a space character matcher.
+    */
   def space: Matcher[Char] = cls( _.isSpaceChar )
 
+  /**
+    * Returns a zero-length matcher that succeeds if the previous character of input is a member of a character class.
+    *
+    * @param pred predicate that determines inclusion in a character class
+    */
   def lookbehind( pred: Char => Boolean ): Matcher[Char] = { in =>
     if (!in.soi && pred( in.lookbehind ))
       Match( in.lookbehind, in )

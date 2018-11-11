@@ -5,9 +5,9 @@ object Main extends App {
 
   val matcher =
     new Matchers[StringReader] {
-      def input = '[' ~> matchedString(rep(letter)) <~ ']'
+      def input = "[[" ~> rep(not("]]") ~> char) <~ "]]"
     }
 
-  println( matcher.input(new StringReader("[asdf]")) )
+  println( matcher.input(new StringReader("[[asdf]]")) )
 
 }
