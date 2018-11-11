@@ -135,6 +135,9 @@ class Matchers[Input <: Reader] {
     def + = rep1(this)
 
     def ? = opt(this)
+
+    def pos: Matcher[Input] = { in => Match( in, in ) }
+
   }
 
   /**
@@ -143,21 +146,17 @@ class Matchers[Input <: Reader] {
   def clear = groupmap.clear
 
   def capture[S]( name: String, m: => Matcher[S] ): Matcher[S] = { in =>
-    val start = in
-
     m( in ) match {
       case res@Match( _, next ) =>
-        groupmap(name) = (start, next)
+        groupmap(name) = (in, next)
         res
       case res => res
     }
   }
 
   def matched[S]( m: => Matcher[S] ): Matcher[(Input, Input)] = { in =>
-    val start = in
-
     m( in ) match {
-      case Match( _, next ) => Match( (start, next), next )
+      case Match( _, next ) => Match( (in, next), next )
       case res => res.asInstanceOf[Mismatch]
     }
   }
