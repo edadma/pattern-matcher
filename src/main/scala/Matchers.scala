@@ -120,6 +120,12 @@ class Matchers[Input <: Reader] {
       }
     }
 
+    /**
+      * Returns a matcher whose result value is transformed by a function.
+      *
+      * @param f the function applied to the result value
+      * @tparam S the type of the transformed result value
+      */
     def ^^ [S]( f: R => S ) = map( f )
 
     def ^^^ [S]( v: => S ) = map (_ => v)
@@ -131,6 +137,9 @@ class Matchers[Input <: Reader] {
     def ? = opt(this)
   }
 
+  /**
+    * Clears capture groups.
+    */
   def clear = groupmap.clear
 
   def capture[S]( name: String, m: => Matcher[S] ): Matcher[S] = { in =>
@@ -153,10 +162,21 @@ class Matchers[Input <: Reader] {
     }
   }
 
-  def matchedString[S]( m: => Matcher[S] ) = matched(m) ^^ { case (s, e) => s substring e }
+  def string[S]( m: => Matcher[S] ) = matched(m) ^^ { case (s, e) => s substring e }
 
+  /**
+    * Returns capture group.
+    *
+    * @param name the name of the capture group to return
+    * @return a capture group with is a pair of input objects: the first is the first character in the group, the second is the next input character after the end of the group.
+    */
   def group( name: String ) = groupmap get name
 
+  /**
+    * Returns the substring from a capture group.
+    *
+    * @param name the name of the capture group
+    */
   def substring( name: String ) =
     groupmap get name map { case (start, end) => start substring end }
 
