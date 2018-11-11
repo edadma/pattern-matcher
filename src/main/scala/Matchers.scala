@@ -122,10 +122,13 @@ class Matchers[Input <: Reader] {
 
     def ^^ [S]( f: R => S ) = map( f )
 
-    def ^^^ [S]( v0: => S ) = { lazy val v = v0
-      map (_ => v)
-    }
+    def ^^^ [S]( v: => S ) = map (_ => v)
 
+    def * = rep(this)
+
+    def + = rep1(this)
+
+    def ? = opt(this)
   }
 
   def clear = groupmap.clear
