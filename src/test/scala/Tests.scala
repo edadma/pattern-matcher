@@ -7,8 +7,11 @@ import prop.PropertyChecks
 class Tests extends FreeSpec with PropertyChecks with TestMatchers {
 	
 	"tests" in {
-//		a [RuntimeException] should be thrownBy {interpret( """ (= 1 1] """ )}
-//		interpret( """ (cdr '(a)) """ ) shouldBe SNil
+		new Matchers[StringReader] {
+			def input = "[[" ~> (letter*) <~ "]]"
+
+			input( new StringReader("[[asdf]]") ).toString shouldBe "Match(List(a, s, d, f),line 1, col 9: [[asdf]])"
+		}
 	}
 	
 }

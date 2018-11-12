@@ -181,12 +181,12 @@ class Matchers[Input <: Reader] {
 
   def rep1[S]( m: => Matcher[S] ) = m ~ rep(m) ^^ { case f ~ r => f :: r }
 
-  def rep[S]( m0: => Matcher[S] ): Matcher[List[S]] = { in => lazy val m = m0
+  def rep[S]( m: => Matcher[S] ): Matcher[List[S]] = { in => lazy val m1 = m
     val buf = new ListBuffer[S]
-    val m1 = m
+    val m2 = m1
 
     def rep( in1: Input ): MatcherResult[List[S]] =
-      m1( in1 ) match {
+      m2( in1 ) match {
         case Match( v, r ) =>
           buf += v
           rep( r )
@@ -195,6 +195,18 @@ class Matchers[Input <: Reader] {
 
       rep( in )
   }
+
+  def rep1sep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) = {
+    val m1 = m
+
+    m1 ~ rep(sep ~> m1) ^^ { case r ~ rs => r :: rs } | succeed( Nil )
+  }
+
+  def repsep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) =
+    opt(rep1sep( m, sep )) ^^ {
+      case None => Nil
+      case Some( l ) => l
+    }
 
   /**
     * Returns a matcher that will match any of a list of characters.
@@ -396,13 +408,13 @@ class Matchers[Input <: Reader] {
   def space: Matcher[Char] = cls( _.isSpaceChar )
 
   /**
-    * Returns a zero-length matcher that succeeds if the previous character of input is a member of a character class.
+    * Returns a zero-length matcher that succeeds if the previous input character is a member of a character class.
     *
     * @param pred predicate that determines inclusion in a character class
     */
   def lookbehind( pred: Char => Boolean ): Matcher[Char] = { in =>
-    if (!in.soi && pred( in.lookbehind ))
-      Match( in.lookbehind, in )
+    if (!in.soi && pred( in.prev ))
+      Match( in.prev, in )
     else
       Mismatch( in )
   }

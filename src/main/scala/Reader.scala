@@ -14,9 +14,7 @@ abstract class Reader {
 
   def next: Reader
 
-  def lookbehind: Char
-
-  def prev: Reader
+  def prev: Char
 
   def line: Int
 
@@ -60,19 +58,19 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
     else
       new StringReader( s, idx + 1, line, col + 1 )
 
-  lazy val lookbehind =
+  lazy val prev =
     if (soi)
       problem
     else
       s( idx - 1 )
 
-  override lazy val prev =
-    if (soi)
-      problem
-    else if (lookbehind == '\n')
-      new StringReader( s, idx - 1, line - 1, 1 )
-    else
-      new StringReader( s, idx - 1, line, col - 1 )
+//  override lazy val prev =
+//    if (soi)
+//      problem
+//    else if (lookbehind == '\n')
+//      new StringReader( s, idx - 1, line - 1, 1 )
+//    else
+//      new StringReader( s, idx - 1, line, col - 1 )
 
   def substring( end: Reader ) = s.substring( idx, end.asInstanceOf[StringReader].idx )
 
