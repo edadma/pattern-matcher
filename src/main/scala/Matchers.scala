@@ -3,7 +3,6 @@ package xyz.hyperreal.matcher
 
 import scala.collection.mutable.{HashMap, ListBuffer}
 
-
 /**
   * Provides methods for coding character pattern matchers.
   *

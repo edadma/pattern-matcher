@@ -4,6 +4,8 @@ package xyz.hyperreal.matcher
 
 abstract class Reader {
 
+  def tabs: Int
+
   def soi: Boolean
 
   def eoi: Boolean
@@ -24,21 +26,42 @@ abstract class Reader {
 
   def substring( end: Reader ): String
 
-  def lineText: String
+  def lineString: String
+
+  protected def error( msg: String ) = sys.error( s"$msg: [$line, $col]" )
+
+  protected def eoiError = error( "end of input" )
+
+  def lineText = {
+    val buf = new StringBuilder
+    var zcol = 0
+
+    lineString foreach {
+      case '\t' =>
+        val len = tabs - zcol%tabs
+
+        buf ++= " "*len
+        zcol += len
+      case '\n' => error( "found newline in string from lineString()" )
+      case c =>
+        buf += c
+        zcol += 1
+    }
+
+    buf.toString
+  }
 
   def errorText = lineText + '\n' + (" "*(col - 1)) + "^\n"
 
-  def longErrorText = s"parser error on line $line, at column $col:\n" + errorText
+  def longErrorText = s"matcher error on line $line, at column $col:\n" + errorText
 
-  override def toString = s"line $line, col $col: $lineText"
+  override def toString = s"line $line, col $col: $lineString"
 
 }
 
-class StringReader private ( s: String, val idx: Int, val line: Int, val col: Int ) extends Reader {
+class StringReader private ( s: String, val idx: Int, val line: Int, val col: Int, val tabs: Int ) extends Reader {
 
-  def this( s: String ) = this( s, 0, 1, 1 )
-
-  private def problem = sys.error( s"end of input: [$line, $col]" )
+  def this( s: String, tabs: Int = 4 ) = this( s, 0, 1, 1, tabs )
 
   override lazy val soi: Boolean = idx == 0
 
@@ -46,35 +69,29 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 
   override lazy val ch: Char =
     if (eoi)
-      problem
+      eoiError
     else
-      s( idx )
+      s.charAt( idx )
 
   override lazy val next =
     if (eoi)
-      problem
+      eoiError
+    else if (ch == '\t')
+      new StringReader( s, idx + 1, line, col + (tabs - (col - 1)%tabs), tabs )
     else if (ch == '\n')
-      new StringReader( s, idx + 1, line + 1, 1 )
+      new StringReader( s, idx + 1, line + 1, 1, tabs )
     else
-      new StringReader( s, idx + 1, line, col + 1 )
+      new StringReader( s, idx + 1, line, col + 1, tabs )
 
   lazy val prev =
     if (soi)
-      problem
+      error( "no previous character" )
     else
-      s( idx - 1 )
-
-//  override lazy val prev =
-//    if (soi)
-//      problem
-//    else if (lookbehind == '\n')
-//      new StringReader( s, idx - 1, line - 1, 1 )
-//    else
-//      new StringReader( s, idx - 1, line, col - 1 )
+      s.charAt( idx - 1 )
 
   def substring( end: Reader ) = s.substring( idx, end.asInstanceOf[StringReader].idx )
 
-  override def lineText = {
+  override def lineString = {
     var ind = idx
 
     while (ind > 0 && s(ind - 1) != '\n' )
@@ -86,4 +103,17 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
     }
   }
 
+}
+
+class SourceReader( ) extends Reader {
+  override def tabs: Int = ???
+  override def soi: Boolean = ???
+  override def eoi: Boolean = ???
+  override def ch: Char = ???
+  override def next: Reader = ???
+  override def prev: Char = ???
+  override def line: Int = ???
+  override def col: Int = ???
+  override def substring(end:  Reader): String = ???
+  override def lineString: String = ???
 }
