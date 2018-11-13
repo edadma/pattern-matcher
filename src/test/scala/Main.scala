@@ -1,13 +1,15 @@
 package xyz.hyperreal.matcher
 
+import java.io.ByteArrayInputStream
+
 
 object Main extends App {
 
   val matcher =
-    new Matchers[StringReader] {
-      def input = "[[" ~> (letter*) <~ "]]"
+    new Matchers[IteratorReader] {
+      def input = "[[" ~> string(rep(letter)) <~ "]]"
     }
 
-  println( matcher.input(new StringReader("[[asdf]]")) )
+  println( matcher.input(Reader.fromInputStream(new ByteArrayInputStream("[[asdf]]".getBytes))) )
 
 }

@@ -1,12 +1,25 @@
 //@
 package xyz.hyperreal.matcher
 
+import java.io.InputStream
+
+
+object Reader {
+
+  def fromString( s: String ) = new StringReader( s )
+
+  def fromInputStream( s: InputStream, enc: String ): IteratorReader = fromInputStream( s )( io.Codec(enc) )
+
+  def fromInputStream( s: InputStream )( implicit codec: io.Codec ) =
+    new IteratorReader( io.Source.fromInputStream(s)(codec) )
+
+}
 
 abstract class Reader {
 
   def tabs: Int
 
-  def soi: Boolean
+  lazy val soi = line == 1 && col == 1
 
   def eoi: Boolean
 
@@ -63,8 +76,6 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 
   def this( s: String, tabs: Int = 4 ) = this( s, 0, 1, 1, tabs )
 
-  override lazy val soi: Boolean = idx == 0
-
   override lazy val eoi: Boolean = idx == s.length
 
   override lazy val ch: Char =
@@ -73,7 +84,7 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
     else
       s.charAt( idx )
 
-  override lazy val next =
+  lazy val next =
     if (eoi)
       eoiError
     else if (ch == '\t')
@@ -105,15 +116,67 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 
 }
 
-class SourceReader( ) extends Reader {
-  override def tabs: Int = ???
-  override def soi: Boolean = ???
-  override def eoi: Boolean = ???
-  override def ch: Char = ???
-  override def next: Reader = ???
-  override def prev: Char = ???
-  override def line: Int = ???
-  override def col: Int = ???
-  override def substring(end:  Reader): String = ???
-  override def lineString: String = ???
+class IteratorReader private ( it: Iterator[Char], val line: Int, val col: Int, val tabs: Int, val _prev: Char,
+                             _start: IteratorReader ) extends Reader {
+
+  def this( it: Iterator[Char], tabs: Int = 4 ) = this( it, 1, 1, tabs, 0, null )
+
+  private val start = if (_start eq null) this else _start
+  private var cur: Char = _
+
+  lazy val eoi = !more
+
+  override lazy val more =
+    if (it.hasNext) {
+      cur = it.next
+      true
+    } else
+      false
+
+  lazy val ch =
+    if (eoi)
+      eoiError
+    else
+      cur
+
+  lazy val next =
+    if (eoi)
+      eoiError
+    else if (ch == '\t')
+      new IteratorReader( it, line, col + (tabs - (col - 1)%tabs), tabs, ch, start )
+    else if (ch == '\n')
+      new IteratorReader( it, line + 1, 1, tabs, ch, null )
+    else
+      new IteratorReader( it, line, col + 1, tabs, ch, start )
+
+  lazy val prev =
+    if (soi)
+      error( "no previous character" )
+    else
+      _prev
+
+  override def substring( end:  Reader ) = {
+    val buf = new StringBuilder
+    var x: Reader = this
+
+    while (x ne end) {
+      buf += x.ch
+      x = x.next
+    }
+
+    buf.toString
+  }
+
+  override def lineString = {
+    val buf = new StringBuilder
+    var x: Reader = this.start
+
+    while (x.more && x.ch != '\n') {
+      buf += x.ch
+      x = x.next
+    }
+
+    buf.toString
+  }
+
 }
