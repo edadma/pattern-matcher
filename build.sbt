@@ -1,4 +1,4 @@
-name := "matcher"
+name := "pattern-matcher"
 
 version := "0.1"
 

@@ -1,4 +1,4 @@
-package xyz.hyperreal.matcher
+package xyz.hyperreal.pattern_matcher
 
 import java.io.ByteArrayInputStream
 

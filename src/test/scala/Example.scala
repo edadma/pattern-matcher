@@ -1,4 +1,4 @@
-import xyz.hyperreal.matcher._
+import xyz.hyperreal.pattern_matcher._
 
 
 object Example /*extends App*/ {

@@ -1,7 +1,7 @@
-Matcher
-=======
+Pattern Matcher
+===============
 
-*`matcher`* is a small combinator parsing library written in Scala mainly for tutorial purposes. For serious parsing needs, it is recommended to use Scala'a `scala-parser-combinators` library.
+*`pattern-matcher`* is a small combinator parsing library written in Scala mainly for tutorial purposes. For serious parsing needs, it is recommended to use Scala'a `scala-parser-combinators` library.
 
 
 Example
@@ -10,7 +10,7 @@ Example
 Here is an example expression parser.
 
 ```scala
-import xyz.hyperreal.matcher._
+import xyz.hyperreal.pattern_matcher._
 
 
 object Example extends App {

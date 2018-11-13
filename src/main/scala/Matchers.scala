@@ -1,5 +1,5 @@
 //@
-package xyz.hyperreal.matcher
+package xyz.hyperreal.pattern_matcher
 
 import scala.collection.mutable.{HashMap, ListBuffer}
 
