@@ -1,7 +1,7 @@
 Pattern Matcher
 ===============
 
-*`pattern-matcher`* is a small combinator parsing library written in Scala mainly for tutorial purposes. For serious parsing needs, it is recommended to use Scala'a `scala-parser-combinators` library.
+*`pattern-matcher`* is a small combinator parsing library written in Scala mainly for tutorial purposes. For serious parsing needs, it is recommended to use Scala's `scala-parser-combinators` library.
 
 
 Example
