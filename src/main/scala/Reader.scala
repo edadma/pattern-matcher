@@ -17,6 +17,8 @@ object Reader {
 
 abstract class Reader {
 
+  val EOI = '\u001A'
+
   def tabs: Int
 
   lazy val soi = line == 1 && col == 1
@@ -80,7 +82,7 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 
   override lazy val ch: Char =
     if (eoi)
-      eoiError
+      EOI
     else
       s.charAt( idx )
 
@@ -117,7 +119,7 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 }
 
 class IteratorReader private ( it: Iterator[Char], val line: Int, val col: Int, val tabs: Int, val _prev: Char,
-                             _start: IteratorReader ) extends Reader {
+                               _start: IteratorReader ) extends Reader {
 
   def this( it: Iterator[Char], tabs: Int = 4 ) = this( it, 1, 1, tabs, 0, null )
 
@@ -135,7 +137,7 @@ class IteratorReader private ( it: Iterator[Char], val line: Int, val col: Int, 
 
   lazy val ch =
     if (eoi)
-      eoiError
+      EOI
     else
       cur
 
