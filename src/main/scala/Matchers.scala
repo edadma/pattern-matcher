@@ -1,7 +1,8 @@
 //@
 package xyz.hyperreal.pattern_matcher
 
-import scala.collection.mutable.{HashMap, ListBuffer}
+import scala.collection.mutable
+import scala.collection.mutable.{ListBuffer}
 
 /**
   * Provides methods for coding character pattern matchers.
@@ -10,7 +11,7 @@ import scala.collection.mutable.{HashMap, ListBuffer}
   */
 class Matchers[Input <: Reader] {
 
-  private val groupmap = new HashMap[String, (Input, Input)]
+  private val groupmap = new mutable.HashMap[String, (Input, Input)]
 
   /**
     * Abstract class for [[Matcher]] results
@@ -334,30 +335,30 @@ class Matchers[Input <: Reader] {
     */
   implicit def ch( c: Char ): Matcher[Char] = cls( _ == c )
 
-  /**
-    * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
-    *
-    * For example
-    *
-    * {{{
-    *   def bracketed: Matcher[List[Char]] = "[[" ~> rep(not("]]") ~> char) <~ "]]"
-    * }}}
-    *
-    * @param s the string to match
-    * @return a matcher that matches against a string, with that string as its result value if it succeeds
-    */
-  implicit def str( s: String ): Matcher[String] = { in =>
-    def str( idx: Int, in1: Input ): MatcherResult[String] =
-      if (idx < s.length)
-        if (in1.more && s.charAt( idx ) == in1.ch)
-          str( idx + 1, in1.next.asInstanceOf[Input] )
-        else
-          Mismatch( in1 )
-      else
-        Match( s, in1 )
-
-    str( 0, in )
-  }
+//  /**
+//    * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
+//    *
+//    * For example
+//    *
+//    * {{{
+//    *   def bracketed: Matcher[List[Char]] = "[[" ~> rep(not("]]") ~> char) <~ "]]"
+//    * }}}
+//    *
+//    * @param s the string to match
+//    * @return a matcher that matches against a string, with that string as its result value if it succeeds
+//    */
+//  implicit def str( s: String ): Matcher[String] = { in =>
+//    def str( idx: Int, in1: Input ): MatcherResult[String] =
+//      if (idx < s.length)
+//        if (in1.more && s.charAt( idx ) == in1.ch)
+//          str( idx + 1, in1.next.asInstanceOf[Input] )
+//        else
+//          Mismatch( in1 )
+//      else
+//        Match( s, in1 )
+//
+//    str( 0, in )
+//  }
 
   /**
     * Case class for return sequence matcher results that can be pattern matched.
@@ -371,40 +372,63 @@ class Matchers[Input <: Reader] {
 
   private val HEXDIGITSET = ('a' to 'f') ++ ('A' to 'F') ++ ('0' to '9') toSet
 
-  /**
-    * Returns a hex digit character matcher.
-    */
-  def hexdigit: Matcher[Char] = cls( HEXDIGITSET )
+  /** The set of reserved identifiers */
+  val reserved = new mutable.HashSet[String]
 
-  /**
-    * Returns a letter or digit character matcher.
-    */
-  def letterOrDigit: Matcher[Char] = cls( _.isLetterOrDigit )
+  /** The set of delimiters */
+  val delimiters = new mutable.HashSet[String]
 
-  /**
-    * Returns a letter character matcher.
-    */
-  def letter: Matcher[Char] = cls( _.isLetter )
+  /** Returns a hex digit character matcher. */
+  def hexdigit = cls( HEXDIGITSET )
 
-  /**
-    * Returns a lower case character matcher.
-    */
-  def lower: Matcher[Char] = cls( _.isLower )
+  /** Returns a letter or digit character matcher. */
+  def letterOrDigit = cls( _.isLetterOrDigit )
 
-  /**
-    * Returns an upper case character matcher.
-    */
-  def upper: Matcher[Char] = cls( _.isUpper )
+  /** Returns a letter character matcher. */
+  def letter = cls( _.isLetter )
 
-  /**
-    * Returns a digit character matcher.
-    */
-  def digit: Matcher[Char] = cls( _.isDigit )
+  /** Returns a lower case character matcher. */
+  def lower = cls( _.isLower )
 
-  /**
-    * Returns a space character matcher.
-    */
-  def space: Matcher[Char] = cls( _.isSpaceChar )
+  /** Returns an upper case character matcher. */
+  def upper = cls( _.isUpper )
+
+  /** Returns a digit character matcher. */
+  def digit = cls( _.isDigit )
+
+  /** Returns a space character matcher. */
+  def space = cls( _.isSpaceChar )
+
+  def identChar( c: Char ) = c.isLetter | c == '_'
+
+  private def _ident = string(cls(identChar) ~ rep(cls(identChar) | digit)) <~ rep(space)
+
+  def ident: Matcher[String] = { in =>
+    _ident( in ) match {
+      case res@Match( m, _ ) =>
+        if (reserved contains m)
+          Mismatch( in )
+        else
+          res
+      case m => m.asInstanceOf[Mismatch]
+    }
+  }
+
+  implicit def keyword( s: String ): Matcher[String] = { in =>
+    if (!reserved.contains( s ))
+      in.error( s"not reserved: $s" )
+    else if (identChar( s.head ))
+      _ident( in ) match {
+        case res@Match( m, _ ) =>
+          if (m == s)
+            res
+          else
+            Mismatch( in )
+        case m => m.asInstanceOf[Mismatch]
+      }
+    else
+
+  }
 
   /**
     * Returns a zero-length matcher that succeeds if the previous input character is a member of a character class.

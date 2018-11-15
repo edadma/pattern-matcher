@@ -43,9 +43,9 @@ abstract class Reader {
 
   def lineString: String
 
-  protected def error( msg: String ) = sys.error( s"$msg: [$line, $col]" )
+  def error( msg: String ) = sys.error( s"$msg: [$line, $col]" )
 
-  protected def eoiError = error( "end of input" )
+  def eoiError = error( "end of input" )
 
   def lineText = {
     val buf = new StringBuilder

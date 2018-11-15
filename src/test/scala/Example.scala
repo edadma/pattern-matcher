@@ -1,7 +1,7 @@
 import xyz.hyperreal.pattern_matcher._
 
 
-object Example /*extends App*/ {
+object Example extends App {
 
   val matcher =
     new Matchers[StringReader] {
@@ -11,7 +11,7 @@ object Example /*extends App*/ {
 
       def number = t(rep1(digit)) ^^ (_.mkString.toInt)
 
-      def additive: Matcher[(Int, Int) => Int] = t("+" | "-") ^^ {
+      def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
         case "+" => _ + _
         case "-" => _ - _
       }
