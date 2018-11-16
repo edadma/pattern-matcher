@@ -5,23 +5,19 @@ object Example extends App {
 
   val matcher =
     new Matchers[StringReader] {
-      def ws = rep(space)
-
-      def t[S]( m: => Matcher[S] ) = m <~ ws
-
-      def number = t(rep1(digit)) ^^ (_.mkString.toInt)
+      delimiters += ("+", "-", "*", "/", "(", ")")
 
       def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
         case "+" => _ + _
         case "-" => _ - _
       }
 
-      def sign: Matcher[Int => Int] = opt(t("+" | "-")) ^^ {
+      def sign: Matcher[Int => Int] = opt("+" | "-") ^^ {
         case Some( "-" ) => -_
         case _ => a => a
       }
 
-      def multiplicative: Matcher[(Int, Int) => Int] = t("*" | "/") ^^ {
+      def multiplicative: Matcher[(Int, Int) => Int] = ("*" | "/") ^^ {
         case "*" => _ * _
         case "/" => _ / _
       }
@@ -36,13 +32,13 @@ object Example extends App {
         }
 
       def ufactor =
-        number | t("(") ~> expression <~ t(")")
+        integerLit | "(" ~> expression <~ ")"
 
       def expression: Matcher[Int] = term ~ rep(additive ~ term) ^^ {
         case number ~ list => (number /: list) { case (x, f ~ y) => f( x, y ) }
       }
 
-      def input = ws ~> expression <~ eoi
+      def input = whitespace ~> expression <~ eoi
     }
 
   println( matcher.input(new StringReader("3 + 4 * 5")) )

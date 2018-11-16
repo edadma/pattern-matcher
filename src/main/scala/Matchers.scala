@@ -414,11 +414,16 @@ class Matchers[Input <: Reader] {
     }
   }
 
-  implicit def keyword( s: String ): Matcher[String] = { in =>
-    if (!reserved.contains( s ))
+  private lazy val _delim: Matcher[String] =
+    (delimiters.toList sortWith (_ > _) map str).foldLeft(fail: Matcher[String])(_ | _)
+
+  protected def delim: Matcher[String] = _delim <~ rep(space)
+
+  implicit def keyword( s: String ): Matcher[String] = { in: Input =>
+    if (!reserved.contains( s ) && !delimiters.contains( s ))
       in.error( s"not reserved: $s" )
-    else if (identChar( s.head ))
-      _ident( in ) match {
+    else
+      (if (identChar( s.head )) _ident else delim)( in ) match {
         case res@Match( m, _ ) =>
           if (m == s)
             res
@@ -426,9 +431,13 @@ class Matchers[Input <: Reader] {
             Mismatch( in )
         case m => m.asInstanceOf[Mismatch]
       }
-    else
-
   }
+
+  def whitespace = rep(space)
+
+  def t[S]( m: => Matcher[S] ) = m <~ whitespace
+
+  def integerLit = t(rep1(digit)) ^^ (_.mkString.toInt)
 
   /**
     * Returns a zero-length matcher that succeeds if the previous input character is a member of a character class.
