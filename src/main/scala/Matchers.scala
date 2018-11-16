@@ -335,30 +335,30 @@ class Matchers[Input <: Reader] {
     */
   implicit def ch( c: Char ): Matcher[Char] = cls( _ == c )
 
-//  /**
-//    * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
-//    *
-//    * For example
-//    *
-//    * {{{
-//    *   def bracketed: Matcher[List[Char]] = "[[" ~> rep(not("]]") ~> char) <~ "]]"
-//    * }}}
-//    *
-//    * @param s the string to match
-//    * @return a matcher that matches against a string, with that string as its result value if it succeeds
-//    */
-//  implicit def str( s: String ): Matcher[String] = { in =>
-//    def str( idx: Int, in1: Input ): MatcherResult[String] =
-//      if (idx < s.length)
-//        if (in1.more && s.charAt( idx ) == in1.ch)
-//          str( idx + 1, in1.next.asInstanceOf[Input] )
-//        else
-//          Mismatch( in1 )
-//      else
-//        Match( s, in1 )
-//
-//    str( 0, in )
-//  }
+  /**
+    * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
+    *
+    * For example
+    *
+    * {{{
+    *   def bracketed: Matcher[List[Char]] = "[[" ~> rep(not("]]") ~> char) <~ "]]"
+    * }}}
+    *
+    * @param s the string to match
+    * @return a matcher that matches against a string, with that string as its result value if it succeeds
+    */
+  def str( s: String ): Matcher[String] = { in =>
+    def str( idx: Int, in1: Input ): MatcherResult[String] =
+      if (idx < s.length)
+        if (in1.more && s.charAt( idx ) == in1.ch)
+          str( idx + 1, in1.next.asInstanceOf[Input] )
+        else
+          Mismatch( in1 )
+      else
+        Match( s, in1 )
+
+    str( 0, in )
+  }
 
   /**
     * Case class for return sequence matcher results that can be pattern matched.
