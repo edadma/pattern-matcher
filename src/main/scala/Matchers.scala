@@ -435,7 +435,9 @@ class Matchers[Input <: Reader] {
 
   def whitespace = rep(space)
 
-  def t[S]( m: => Matcher[S] ) = m <~ whitespace
+  def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
+
+  def matchall[R]( m: Matcher[R] ) = m <~ eoi
 
   def integerLit = t(rep1(digit)) ^^ (_.mkString.toInt)
 

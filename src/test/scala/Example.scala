@@ -26,19 +26,17 @@ object Example extends App {
         case number ~ list => (number /: list) { case (x, f ~ y) => f( x, y ) }
       }
 
-      def factor =
-        sign ~ ufactor ^^ {
-          case s ~ u => s( u )
-        }
+      def factor = sign ~ ufactor ^^ {
+        case s ~ u => s( u )
+      }
 
-      def ufactor =
-        integerLit | "(" ~> expression <~ ")"
+      def ufactor = integerLit | "(" ~> expression <~ ")"
 
       def expression: Matcher[Int] = term ~ rep(additive ~ term) ^^ {
         case number ~ list => (number /: list) { case (x, f ~ y) => f( x, y ) }
       }
 
-      def input = whitespace ~> expression <~ eoi
+      def input = matchall(expression)
     }
 
   println( matcher.input(new StringReader("3 + 4 * 5")) )
