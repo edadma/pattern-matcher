@@ -7,7 +7,9 @@ import prop.PropertyChecks
 class Tests extends FreeSpec with PropertyChecks with TestMatchers {
 	
 	"tests" in {
-		new Matchers[StringReader] {
+		new Matchers {
+			delimiters += ("[[", "]]")
+
 			def input = "[[" ~> (letter*) <~ "]]"
 
 			input( new StringReader("[[asdf]]") ).toString shouldBe "Match(List(a, s, d, f),line 1, col 9: [[asdf]])"

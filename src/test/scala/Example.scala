@@ -1,10 +1,10 @@
 import xyz.hyperreal.pattern_matcher._
 
 
-object Example extends App {
+object Example /*extends App*/ {
 
   val matcher =
-    new Matchers[StringReader] {
+    new Matchers {
       delimiters += ("+", "-", "*", "/", "(", ")")
 
       def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {

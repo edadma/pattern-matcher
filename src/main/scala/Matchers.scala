@@ -2,14 +2,14 @@
 package xyz.hyperreal.pattern_matcher
 
 import scala.collection.mutable
-import scala.collection.mutable.{ListBuffer}
+import scala.collection.mutable.ListBuffer
 
 /**
   * Provides methods for coding character pattern matchers.
-  *
-  * @tparam Input the type of [[Reader]] that will be used
   */
-class Matchers[Input <: Reader] {
+class Matchers {
+
+  type Input = Reader
 
   private val groupmap = new mutable.HashMap[String, (Input, Input)]
 
@@ -439,7 +439,7 @@ class Matchers[Input <: Reader] {
 
   def matchall[R]( m: Matcher[R] ) = m <~ eoi
 
-  def integerLit = t(rep1(digit)) ^^ (_.mkString.toInt)
+  def integerLit = t(string(rep1(digit))) ^^ (_.toInt)
 
   /**
     * Returns a zero-length matcher that succeeds if the previous input character is a member of a character class.
@@ -452,9 +452,4 @@ class Matchers[Input <: Reader] {
     else
       Mismatch( in )
   }
-
-//  def boundary( start: Boolean, predb: Char => Boolean,
-//                end: Boolean, predf: Char => Boolean ) =
-//    (lookbehind( predb ) | (if (start) soi else fail)) ~ guard(cls(predf) | (if (end) eoi else fail))
-
 }
