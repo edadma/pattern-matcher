@@ -39,6 +39,6 @@ object Example /*extends App*/ {
       def input = matchall(expression)
     }
 
-  println( matcher.input(new StringReader("3 + 4 * 5")) )
+  println( matcher.input(Reader.fromString("3 + 4 * 5")) )
 
 }

@@ -16,7 +16,7 @@ import xyz.hyperreal.pattern_matcher._
 object Example extends App {
 
   val matcher =
-    new Matchers[StringReader] {
+    new Matchers {
       delimiters += ("+", "-", "*", "/", "(", ")")
 
       def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
@@ -51,7 +51,7 @@ object Example extends App {
       def input = matchall(expression)
     }
 
-  println( matcher.input(new StringReader("3 + 4 * 5")) )
+  println( matcher.input(Reader.fromString("3 + 4 * 5")) )
 
 }
 ```
