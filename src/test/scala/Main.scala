@@ -4,10 +4,10 @@ package xyz.hyperreal.pattern_matcher
 object Main extends App {
 
   val matcher =
-    new Matchers {
+    new Matchers[StringReader] {
       delimiters += ("[[", "]]")
 
-      def input = "[[" ~> string(rep(letter)) <~ "]]"
+      def input = matchall("[[" ~> string(rep(letter)) <~ "]]")
     }
 
   println( matcher.input(Reader.fromString("[[asdf]]")) )

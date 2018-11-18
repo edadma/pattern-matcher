@@ -7,9 +7,7 @@ import scala.collection.mutable.ListBuffer
 /**
   * Provides methods for coding character pattern matchers.
   */
-class Matchers {
-
-  type Input = Reader
+class Matchers[Input <: Reader] {
 
   private val groupmap = new mutable.HashMap[String, (Input, Input)]
 
@@ -50,7 +48,7 @@ class Matchers {
     *
     * @param next character at which the mismatch occurred
     */
-  case class Mismatch( next: Input ) extends MatcherResult {
+  case class Mismatch( msg: String, next: Input ) extends MatcherResult {
     def map[S]( f: Nothing => S ) = this
   }
 
@@ -138,6 +136,13 @@ class Matchers {
 
     def pos: Matcher[Input] = { in => Match( in, in ) }
 
+    def withMessage( msg: String ): Matcher[R] = { in =>
+      this(in) match {
+        case Mismatch( _, next) => Mismatch( msg, next)
+        case other             => other
+      }
+    }
+
   }
 
   /**
@@ -190,7 +195,7 @@ class Matchers {
         case Match( v, r ) =>
           buf += v
           rep( r )
-        case Mismatch( _ ) => Match( buf.toList, in1 )
+        case Mismatch( _, _ ) => Match( buf.toList, in1 )
       }
 
       rep( in )
@@ -214,7 +219,8 @@ class Matchers {
     * @param cs argument list of characters
     * @return a matcher that only matches a character from a list
     */
-  def anyOf( cs: Char* ) = cls( cs contains _ )
+  def anyOf( cs: Char* ) =
+    cls( cs contains _, "expected one of: " + cs.map(c => s"'$c'").mkString(", ") )
 
   /**
     * Returns a matcher that will matcher any character not in a list of characters.
@@ -222,7 +228,8 @@ class Matchers {
     * @param cs argument list of characters
     * @return a matcher that only matches a character not on a list
     */
-  def noneOf( cs: Char* ) = cls( !cs.contains(_) )
+  def noneOf( cs: Char* ) =
+    cls( !cs.contains(_), "not expecting any of: " + cs.map(c => s"'$c'").mkString(", ") )
 
   /**
     * Returns a matcher that allows a matcher to succeed optionally.
@@ -242,8 +249,8 @@ class Matchers {
     */
   def not[S]( m: Matcher[S] ): Matcher[Unit] = { in =>
     m( in ) match {
-      case Match( _, _ ) => Mismatch( in )
-      case Mismatch( _ ) => Match( (), in )
+      case Match( _, _ ) => Mismatch( "negation", in )
+      case Mismatch( _, _ ) => Match( (), in )
     }
   }
 
@@ -271,7 +278,7 @@ class Matchers {
       if (in.soi)
         Match( (), in )
       else
-        Mismatch( in )
+        Mismatch( "expected start of input", in )
 
   /**
     * Returns a zero-length matcher that succeeds at the end of input.
@@ -283,7 +290,7 @@ class Matchers {
       if (in.eoi)
         Match( (), in )
       else
-        Mismatch( in )
+        Mismatch( "expected end of input", in )
 
   /**
     * Returns a matcher that always succeeds.
@@ -299,7 +306,7 @@ class Matchers {
     *
     * @return a matcher that always fails with a result containing the current point in the input stream
     */
-  def fail: Matcher[Nothing] = Mismatch( _ )
+  def fail( msg: String ): Matcher[Nothing] = Mismatch( msg, _ )
 
   /**
     * Returns a matcher that matches the current input character if it is a member of a class of characters.
@@ -307,11 +314,11 @@ class Matchers {
     * @param pred predicate that determines if the current input character matches
     * @return a matcher for matching character classes
     */
-  def cls( pred: Char => Boolean ): Matcher[Char] = { in =>
+  def cls( pred: Char => Boolean, msg: String = "not in character class" ): Matcher[Char] = { in =>
     if (in.more && pred( in.ch ))
       Match( in.ch, in.next.asInstanceOf[Input] )
     else
-      Mismatch( in )
+      Mismatch( msg, in )
   }
 
   /**
@@ -333,7 +340,7 @@ class Matchers {
     * @param c the character to be matched
     * @return the character matcher
     */
-  implicit def ch( c: Char ): Matcher[Char] = cls( _ == c )
+  implicit def ch( c: Char ): Matcher[Char] = cls( _ == c, s"expected '$c'" )
 
   /**
     * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
@@ -353,7 +360,7 @@ class Matchers {
         if (in1.more && s.charAt( idx ) == in1.ch)
           str( idx + 1, in1.next.asInstanceOf[Input] )
         else
-          Mismatch( in1 )
+          Mismatch( s"expected '$s'", in1 )
       else
         Match( s, in1 )
 
@@ -379,35 +386,35 @@ class Matchers {
   val delimiters = new mutable.HashSet[String]
 
   /** Returns a hex digit character matcher. */
-  def hexdigit = cls( HEXDIGITSET )
+  def hexdigit = cls( HEXDIGITSET, "expected hexadecimal digit" )
 
   /** Returns a letter or digit character matcher. */
-  def letterOrDigit = cls( _.isLetterOrDigit )
+  def letterOrDigit = cls( _.isLetterOrDigit, "expected a letter or digit" )
 
   /** Returns a letter character matcher. */
-  def letter = cls( _.isLetter )
+  def letter = cls( _.isLetter, "expected a letter" )
 
   /** Returns a lower case character matcher. */
-  def lower = cls( _.isLower )
+  def lower = cls( _.isLower, "expected a lower case letter" )
 
   /** Returns an upper case character matcher. */
-  def upper = cls( _.isUpper )
+  def upper = cls( _.isUpper, "expected an upper case letter" )
 
   /** Returns a digit character matcher. */
-  def digit = cls( _.isDigit )
+  def digit = cls( _.isDigit, "expected a digit" )
 
   /** Returns a space character matcher. */
-  def space = cls( _.isSpaceChar )
+  def space = cls( _.isSpaceChar, "expected a space character" )
 
   def identChar( c: Char ) = c.isLetter | c == '_'
 
-  private def _ident = string(cls(identChar) ~ rep(cls(identChar) | digit)) <~ rep(space)
+  private def _ident = t(string(cls(identChar) ~ rep(cls(identChar) | digit)))
 
   def ident: Matcher[String] = { in =>
     _ident( in ) match {
       case res@Match( m, _ ) =>
         if (reserved contains m)
-          Mismatch( in )
+          Mismatch( s"reserved: '$m'", in )
         else
           res
       case m => m.asInstanceOf[Mismatch]
@@ -415,20 +422,20 @@ class Matchers {
   }
 
   private lazy val _delim: Matcher[String] =
-    (delimiters.toList sortWith (_ > _) map str).foldLeft(fail: Matcher[String])(_ | _)
+    (delimiters.toList sortWith (_ > _) map str).foldRight(fail("expected a delimiter"): Matcher[String])(_ | _)
 
-  protected def delim: Matcher[String] = _delim <~ rep(space)
+  protected def delim: Matcher[String] = t(_delim)
 
   implicit def keyword( s: String ): Matcher[String] = { in: Input =>
     if (!reserved.contains( s ) && !delimiters.contains( s ))
       in.error( s"not reserved: $s" )
     else
-      (if (identChar( s.head )) _ident else delim)( in ) match {
+      (if (identChar( s.head )) _ident else delim).withMessage(s"expected '$s'")( in ) match {
         case res@Match( m, _ ) =>
           if (m == s)
             res
           else
-            Mismatch( in )
+            Mismatch( s"expected '$s'", in )
         case m => m.asInstanceOf[Mismatch]
       }
   }
@@ -446,10 +453,10 @@ class Matchers {
     *
     * @param pred predicate that determines inclusion in a character class
     */
-  def lookbehind( pred: Char => Boolean ): Matcher[Char] = { in =>
+  def lookbehind( pred: Char => Boolean, msg: String = "not in character class" ): Matcher[Char] = { in =>
     if (!in.soi && pred( in.prev ))
       Match( in.prev, in )
     else
-      Mismatch( in )
+      Mismatch( msg, in )
   }
 }
