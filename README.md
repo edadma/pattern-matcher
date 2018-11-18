@@ -100,7 +100,7 @@ Building
 
 ### Requirements
 
-- Java 10+
+- Java 11+
 - SBT 1.2.6+
 - Scala 2.12.7+
 
