@@ -182,3 +182,28 @@ class IteratorReader private ( it: Iterator[Char], val line: Int, val col: Int, 
   }
 
 }
+
+class CharReader( val tabs: Int, val ch: Char, val next: Reader, val prev: Char,
+                  val line: Int, val col: Int ) extends Reader {
+
+  val eoi = false
+
+  def substring( end:  Reader ) = ch + next.substring( end )
+
+  def lineString: String = ???
+
+}
+
+class IndentationReader( r: Reader ) extends Reader {
+
+  override def tabs: Int = ???
+  override def eoi: Boolean = ???
+  override def ch: Char = ???
+  override def next: Reader = ???
+  override def prev: Char = ???
+  override def line: Int = ???
+  override def col: Int = ???
+  override def substring( end:  Reader ): String = ???
+  override def lineString: String = ???
+
+}
