@@ -42,6 +42,7 @@ object Example2 extends App {
 
       def statement: Matcher[Statement] =
         pos ~ ident ~ ":=" ~ expression ^^ { case p ~ n ~ _ ~ e => Assign( p, n, e ) } |
+        "call" ~ pos ~ ident ^^ { case _ ~ p ~ n => Call( p, n ) } |
         "write" ~> expression ^^ Write |
         "begin" ~> rep1sep(statement, ";") <~ "end" ^^ Sequence |
         "if" ~ condition ~ "then" ~ statement ^^ { case _ ~ c ~ _ ~ s => If( c, s ) } |
@@ -96,10 +97,18 @@ object Example2 extends App {
     stat match {
       case Assign( pos, name, expr ) =>
         find( name, scope ) match {
-          case None => sys.error( pos.longErrorText(s"'$name' not declared") )
+          case None => sys.error( pos.longErrorText(s"variable '$name' not declared") )
           case Some( v: Var ) => v.v = evalExpression( expr, scope )
           case _ => sys.error( pos.longErrorText(s"'$name' not assignable") )
         }
+      case Call( pos, name ) =>
+        find( name, scope ) match {
+          case None => sys.error( pos.longErrorText(s"procedure '$name' not declared") )
+          case Some( b: Block ) =>
+            evalBlock( b, Nil )
+          case _ => sys.error( pos.longErrorText(s"'$name' not a procedure") )
+        }
+
       case Write( expr ) => println( evalExpression(expr, scope) )
       case Sequence( stats ) => stats foreach (evalStatement( _, scope ))
       case If( cond, stat ) => if (evalCondition( cond, scope )) evalStatement( stat, scope )
@@ -156,6 +165,7 @@ object Example2 extends App {
 
   abstract class Statement
   case class Assign( pos: Reader, name: String, expr: Expression ) extends Statement
+  case class Call( pos: Reader, name: String ) extends Statement
   case class Write( expr: Expression ) extends Statement
   case class Sequence( stats: List[Statement] ) extends Statement
   case class If( cond: Condition, stat: Statement ) extends Statement
@@ -172,16 +182,90 @@ object Example2 extends App {
   case class Ident( pos: Reader, name: String ) extends Expression
 
   run(
+//    """
+//      |const max = 100;
+//      |var arg, ret;
+//      |
+//      |procedure isprime;
+//      |var i;
+//      |begin
+//      |  ret := 1;
+//      |  i := 2;
+//      |  while i < arg do
+//      |  begin
+//      |    if arg / i * i = arg then
+//      |    begin
+//      |      ret := 0;
+//      |      i := arg
+//      |    end;
+//      |    i := i + 1
+//      |  end
+//      |end;
+//      |
+//      |write 123
+//      |.
+//    """.stripMargin
     """
-      |const c = 3;
-      |var a = 1;
+      |const max = 100;
+      |var arg, ret;
       |
-      |while a <= c do
+      |procedure isprime;
+      |var i;
       |begin
-      |  write a;
-      |  a := a + 1
-      |end.
+      |  ret := 1;
+      |  i := 2;
+      |  while i < arg do
+      |  begin
+      |    if arg / i * i = arg then
+      |    begin
+      |      ret := 0;
+      |      i := arg
+      |    end;
+      |    i := i + 1
+      |  end
+      |end;
+      |
+      |begin
+      |  arg := 2;
+      |  call isprime;
+      |  write ret
+      |end
+      |.
     """.stripMargin
+//  """
+//    |const max = 100;
+//    |var arg, ret;
+//    |
+//    |procedure isprime;
+//    |var i;
+//    |begin
+//    |  ret := 1;
+//    |  i := 2;
+//    |  while i < arg do
+//    |  begin
+//    |    if arg / i * i = arg then
+//    |    begin
+//    |      ret := 0;
+//    |      i := arg
+//    |    end;
+//    |    i := i + 1
+//    |  end
+//    |end;
+//    |
+//    |procedure primes;
+//    |begin
+//    |  arg := 2;
+//    |  while arg < max do
+//    |  begin
+//    |    call isprime;
+//    |    if ret = 1 then write arg;
+//    |    arg := arg + 1
+//    |  end
+//    |end;
+//    |
+//    |call primes
+//    |.
+//  """.stripMargin
   )
 
 }
