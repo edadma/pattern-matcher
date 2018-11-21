@@ -68,7 +68,7 @@ abstract class Reader {
 
   def errorText = lineText + '\n' + (" "*(col - 1)) + "^\n"
 
-  def longErrorText = s"matcher error on line $line, at column $col:\n" + errorText
+  def longErrorText( msg: String ) = s"$msg (line $line, column $col):\n" + errorText
 
   override def toString = s"line $line, col $col: $lineString"
 

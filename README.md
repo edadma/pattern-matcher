@@ -10,20 +10,21 @@ Pattern Matcher
 *`pattern-matcher`* is a small combinator parsing library written in Scala mainly as a learning experience. For serious parsing needs, it is recommended to use Scala's `scala-parser-combinators` library.
 
 
-Example
--------
+Example 1
+---------
 
 Here is an example expression parser.
 
 ```scala
 import xyz.hyperreal.pattern_matcher._
 
-
-object Example extends App {
+object Example1 extends App {
 
   val matcher =
     new Matchers[StringReader] {
       delimiters += ("+", "-", "*", "/", "(", ")")
+
+      def input = matchall(expression)
 
       def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
         case "+" => _ + _
@@ -40,31 +41,45 @@ object Example extends App {
         case "/" => _ / _
       }
 
+      def expression: Matcher[Int] = sign ~ term ~ rep(additive ~ term) ^^ {
+        case s ~ n ~ l => (s(n) /: l) { case (x, f ~ y) => f( x, y ) }
+      }
+
       def term = factor ~ rep(multiplicative ~ factor) ^^ {
-        case number ~ list => (number /: list) { case (x, f ~ y) => f( x, y ) }
+        case n ~ l => (n /: l) { case (x, f ~ y) => f( x, y ) }
       }
 
-      def factor = sign ~ ufactor ^^ {
-        case s ~ u => s( u )
-      }
-
-      def ufactor = integerLit | "(" ~> expression <~ ")"
-
-      def expression: Matcher[Int] = term ~ rep(additive ~ term) ^^ {
-        case number ~ list => (number /: list) { case (x, f ~ y) => f( x, y ) }
-      }
-
-      def input = matchall(expression)
+      def factor = integerLit | "(" ~> expression <~ ")"
     }
 
-  println( matcher.input(Reader.fromString("3 + 4 * 5")) )
+  def run( s: String ) =
+    matcher.input( Reader.fromString(s) ) match {
+      case matcher.Match( result, _ ) => println( result )
+      case m: matcher.Mismatch => m.print
+    }
+
+  run( "-3 + 4 * 5" )
+  run( "-5" )
+  run( "2 +" )
 
 }
 ```
 
 ### output
 
-23
+-23
+5
+expected end of input (line 1, column 3):
+2 +
+
+
+Example 2
+---------
+
+As a longer example, here is an implementation of Niklaus Wirth's PL/0 programming language from his 1976 book "Algorithms + Data Structures = Programs".
+
+```scala
+```
 
 
 Usage

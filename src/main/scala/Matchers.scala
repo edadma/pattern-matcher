@@ -50,6 +50,8 @@ class Matchers[Input <: Reader] {
     */
   case class Mismatch( msg: String, next: Input ) extends MatcherResult {
     def map[S]( f: Nothing => S ) = this
+
+    def print = Console.print( next.longErrorText(msg) )
   }
 
   /**
@@ -133,8 +135,6 @@ class Matchers[Input <: Reader] {
     def + = rep1(this)
 
     def ? = opt(this)
-
-    def pos: Matcher[Input] = { in => Match( in, in ) }
 
     def withMessage( msg: String ): Matcher[R] = { in =>
       this(in) match {
@@ -267,6 +267,8 @@ class Matchers[Input <: Reader] {
       case f => f
     }
   }
+
+  def pos: Matcher[Input] = { in => Match( in, in ) }
 
   /**
     * Returns a zero-length matcher that succeeds at the start of input.
@@ -404,7 +406,7 @@ class Matchers[Input <: Reader] {
   def digit = cls( _.isDigit, "expected a digit" )
 
   /** Returns a space character matcher. */
-  def space = cls( _.isSpaceChar, "expected a space character" )
+  def space = cls( _.isWhitespace, "expected a space character" )
 
   def identChar( c: Char ) = c.isLetter | c == '_'
 
