@@ -79,7 +79,7 @@ expected end of input (line 1, column 3):
 Example 2
 ---------
 
-As a longer example, here is an implementation (in under 170 lines of code) of Niklaus Wirth's PL/0 programming language from his 1976 book "Algorithms + Data Structures = Programs".
+As a longer example, here is an implementation (in under 160 lines of code) of Niklaus Wirth's PL/0 programming language from his 1976 book "Algorithms + Data Structures = Programs".
 
 ```scala
 import xyz.hyperreal.pattern_matcher._
