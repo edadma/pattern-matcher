@@ -5,7 +5,7 @@ Pattern Matcher
 [![Build status](https://ci.appveyor.com/api/projects/status/h5b23n2vd0k4oh9q/branch/master?svg=true)](https://ci.appveyor.com/project/edadma/pattern-matcher/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/edadma/pattern-matcher/badge.svg?branch=master)](https://coveralls.io/github/edadma/pattern-matcher?branch=master)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://github.com/edadma/pattern-matcher/blob/master/LICENSE)
-[![Version](https://img.shields.io/badge/latest_release-v0.2-orange.svg)](https://github.com/edadma/pattern-matcher/releases/tag/v0.2)
+[![Version](https://img.shields.io/badge/latest_release-v0.2.1-orange.svg)](https://github.com/edadma/pattern-matcher/releases/tag/v0.2.1)
 
 *`pattern-matcher`* is a small combinator parsing library written in Scala mainly as a learning experience. For serious parsing needs, it is recommended to use Scala's `scala-parser-combinators` library.
 
@@ -76,7 +76,7 @@ expected end of input (line 1, column 3):
 Example 2
 ---------
 
-As a longer example, here is an implementation of Niklaus Wirth's PL/0 programming language from his 1976 book "Algorithms + Data Structures = Programs".
+As a longer example, here is an implementation (in under 170 lines of code) of Niklaus Wirth's PL/0 programming language from his 1976 book "Algorithms + Data Structures = Programs".
 
 ```scala
 import xyz.hyperreal.pattern_matcher._
@@ -308,7 +308,7 @@ Use the following definition to use *pattern-matcher* in your Maven project:
 <dependency>
   <groupId>xyz.hyperreal</groupId>
   <artifactId>pattern-matcher</artifactId>
-  <version>0.2</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
@@ -317,7 +317,7 @@ Add the following to your `build.sbt` file to use Backslash in your SBT project:
 ```sbt
 resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
-libraryDependencies += "xyz.hyperreal" %% "pattern-matcher" % "0.2"
+libraryDependencies += "xyz.hyperreal" %% "pattern-matcher" % "0.2.1"
 ```
 
 Building
