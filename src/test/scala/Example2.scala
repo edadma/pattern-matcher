@@ -13,32 +13,28 @@ object Example2 extends App {
         case n ~ _ ~ v => Constant( n, v )
       }
 
-      def consts =
-        opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
-          case None => Nil
-          case Some( l ) => l
-        }
+      def consts = opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
+        case None => Nil
+        case Some( l ) => l
+      }
 
       def vari = ident ~ opt("=" ~> integerLit) ^^ {
         case n ~ None => Variable( n, 0 )
         case n ~ Some( v ) => Variable( n, v )
       }
 
-      def vars =
-        opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
-          case None => Nil
-          case Some( l ) => l
-        }
+      def vars = opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
+        case None => Nil
+        case Some( l ) => l
+      }
 
-      def proc: Matcher[Procedure] =
-        "procedure" ~ ident ~ ";" ~ block ~ ";" ^^ {
-          case _ ~ n ~ _ ~ b ~ _ => Procedure( n, b )
-        }
+      def proc: Matcher[Procedure] = "procedure" ~ ident ~ ";" ~ block ~ ";" ^^ {
+        case _ ~ n ~ _ ~ b ~ _ => Procedure( n, b )
+      }
 
-      def block =
-        consts ~ vars ~ rep(proc) ~ statement ^^ {
-          case c ~ v ~ p ~ s => Block( c ++ v ++ p, s )
-        }
+      def block = consts ~ vars ~ rep(proc) ~ statement ^^ {
+        case c ~ v ~ p ~ s => Block( c ++ v ++ p, s )
+      }
 
       def statement: Matcher[Statement] =
         pos ~ ident ~ ":=" ~ expression ^^ { case p ~ n ~ _ ~ e => Assign( p, n, e ) } |
@@ -76,20 +72,20 @@ object Example2 extends App {
   def evalBlock( block: Block, outer: List[Map[String, Any]] ): Unit = {
     val scope =
       block.decls.map {
-        case Constant( name, value ) => (name -> value)
-        case Variable( name, init ) => (name -> new Var(init))
-        case Procedure( name, body ) => (name -> body)
+        case Constant( name, value ) => name -> value
+        case Variable( name, init ) => name -> new Var( init )
+        case Procedure( name, body ) => name -> body
       }.toMap :: outer
 
     evalStatement( block.stat, scope )
   }
 
-  def find( name: String, scope: List[Map[String, Any]] ): Option[Any] =
+  def find( name: String, scope: List[Map[String, Any]] ): Option[(Any, List[Map[String, Any]])] =
     scope match {
       case Nil => None
-      case h :: t => h get name match {
+      case inner@h :: t => h get name match {
         case None => find( name, t )
-        case v => v
+        case Some( v ) => Some( (v, inner) )
       }
     }
 
@@ -98,38 +94,31 @@ object Example2 extends App {
       case Assign( pos, name, expr ) =>
         find( name, scope ) match {
           case None => sys.error( pos.longErrorText(s"variable '$name' not declared") )
-          case Some( v: Var ) => v.v = evalExpression( expr, scope )
+          case Some( (v: Var, _) ) => v.v = evalExpression( expr, scope )
           case _ => sys.error( pos.longErrorText(s"'$name' not assignable") )
         }
       case Call( pos, name ) =>
         find( name, scope ) match {
           case None => sys.error( pos.longErrorText(s"procedure '$name' not declared") )
-          case Some( b: Block ) =>
-            evalBlock( b, Nil )
+          case Some( (b: Block, inner) ) => evalBlock( b, inner )
           case _ => sys.error( pos.longErrorText(s"'$name' not a procedure") )
         }
 
       case Write( expr ) => println( evalExpression(expr, scope) )
       case Sequence( stats ) => stats foreach (evalStatement( _, scope ))
-      case If( cond, stat ) => if (evalCondition( cond, scope )) evalStatement( stat, scope )
-      case While( cond, stat ) => while (evalCondition( cond, scope )) evalStatement( stat, scope )
+      case If( cond, body ) => if (evalCondition( cond, scope )) evalStatement( body, scope )
+      case While( cond, body ) => while (evalCondition( cond, scope )) evalStatement( body, scope )
     }
 
   def evalCondition( cond: Condition, scope: List[Map[String, Any]] ) =
     cond match {
       case Odd( expr ) => evalExpression( expr, scope )%2 == 1
-      case Comparison( left, comp, right ) =>
-        val l = evalExpression( left, scope )
-        val r = evalExpression( right, scope )
-
-        comp match {
-          case "<" => l < r
-          case ">" => l > r
-          case "=" => l == r
-          case "#" => l != r
-          case "<=" => l <= r
-          case ">=" => r >= r
-        }
+      case Comparison( left, "<", right ) => evalExpression( left, scope ) < evalExpression( right, scope )
+      case Comparison( left, ">", right ) => evalExpression( left, scope ) > evalExpression( right, scope )
+      case Comparison( left, "=", right ) => evalExpression( left, scope ) == evalExpression( right, scope )
+      case Comparison( left, "#", right ) => evalExpression( left, scope ) != evalExpression( right, scope )
+      case Comparison( left, "<=", right ) => evalExpression( left, scope ) <= evalExpression( right, scope )
+      case Comparison( left, ">=", right ) => evalExpression( left, scope ) >= evalExpression( right, scope )
     }
 
   def evalExpression( expr: Expression, scope: List[Map[String, Any]] ): Int =
@@ -137,21 +126,15 @@ object Example2 extends App {
       case Ident( pos, name ) =>
         find( name, scope ) match {
           case None => sys.error( pos.longErrorText(s"'$name' not declared") )
-          case Some( v: Var ) => v.v
-          case Some( n: Int ) => n
+          case Some( (v: Var, _) ) => v.v
+          case Some( (n: Int, _) ) => n
           case _ => sys.error( pos.longErrorText(s"'$name' not an integer") )
         }
       case Number( n ) => n
-      case Operation( left, op, right ) =>
-        val l = evalExpression( left, scope )
-        val r = evalExpression( right, scope )
-
-        op match {
-          case "+" => l + r
-          case "-" => l - r
-          case "*" => l * r
-          case "/" => l / r
-        }
+      case Operation( left, "+", right ) => evalExpression( left, scope ) + evalExpression( right, scope )
+      case Operation( left, "-", right ) => evalExpression( left, scope ) - evalExpression( right, scope )
+      case Operation( left, "*", right ) => evalExpression( left, scope ) * evalExpression( right, scope )
+      case Operation( left, "/", right ) => evalExpression( left, scope ) / evalExpression( right, scope )
     }
 
   class Var( var v: Int )
@@ -182,31 +165,8 @@ object Example2 extends App {
   case class Ident( pos: Reader, name: String ) extends Expression
 
   run(
-//    """
-//      |const max = 100;
-//      |var arg, ret;
-//      |
-//      |procedure isprime;
-//      |var i;
-//      |begin
-//      |  ret := 1;
-//      |  i := 2;
-//      |  while i < arg do
-//      |  begin
-//      |    if arg / i * i = arg then
-//      |    begin
-//      |      ret := 0;
-//      |      i := arg
-//      |    end;
-//      |    i := i + 1
-//      |  end
-//      |end;
-//      |
-//      |write 123
-//      |.
-//    """.stripMargin
     """
-      |const max = 100;
+      |const max = 10;
       |var arg, ret;
       |
       |procedure isprime;
@@ -225,47 +185,19 @@ object Example2 extends App {
       |  end
       |end;
       |
+      |procedure primes;
       |begin
       |  arg := 2;
-      |  call isprime;
-      |  write ret
-      |end
-      |.
+      |  while arg < max do
+      |  begin
+      |    call isprime;
+      |    if ret = 1 then write arg;
+      |    arg := arg + 1
+      |  end
+      |end;
+      |
+      |call primes.
     """.stripMargin
-//  """
-//    |const max = 100;
-//    |var arg, ret;
-//    |
-//    |procedure isprime;
-//    |var i;
-//    |begin
-//    |  ret := 1;
-//    |  i := 2;
-//    |  while i < arg do
-//    |  begin
-//    |    if arg / i * i = arg then
-//    |    begin
-//    |      ret := 0;
-//    |      i := arg
-//    |    end;
-//    |    i := i + 1
-//    |  end
-//    |end;
-//    |
-//    |procedure primes;
-//    |begin
-//    |  arg := 2;
-//    |  while arg < max do
-//    |  begin
-//    |    call isprime;
-//    |    if ret = 1 then write arg;
-//    |    arg := arg + 1
-//    |  end
-//    |end;
-//    |
-//    |call primes
-//    |.
-//  """.stripMargin
   )
 
 }
