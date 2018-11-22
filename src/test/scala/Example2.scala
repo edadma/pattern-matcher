@@ -4,8 +4,8 @@ object Example2 extends App {
 
   val matcher =
     new Matchers[StringReader] {
-      reserved += ("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call", "write")
-      delimiters += ("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=")
+      reserved += ("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call")
+      delimiters += ("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!")
 
       def program = matchall(block <~ ".")
 
@@ -39,7 +39,7 @@ object Example2 extends App {
       def statement: Matcher[Statement] =
         pos ~ ident ~ ":=" ~ expression ^^ { case p ~ n ~ _ ~ e => Assign( p, n, e ) } |
         "call" ~ pos ~ ident ^^ { case _ ~ p ~ n => Call( p, n ) } |
-        "write" ~> expression ^^ Write |
+        "!" ~> expression ^^ Write |
         "begin" ~> rep1sep(statement, ";") <~ "end" ^^ Sequence |
         "if" ~ condition ~ "then" ~ statement ^^ { case _ ~ c ~ _ ~ s => If( c, s ) } |
         "while" ~ condition ~ "do" ~ statement ^^ { case _ ~ c ~ _ ~ s => While( c, s ) }
@@ -188,7 +188,7 @@ object Example2 extends App {
       |  arg := 2;
       |  while arg < max do begin
       |    call isprime;
-      |    if ret = 1 then write arg;
+      |    if ret = 1 then !arg;
       |    arg := arg + 1
       |  end
       |end;
