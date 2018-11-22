@@ -174,10 +174,8 @@ object Example2 extends App {
       |begin
       |  ret := 1;
       |  i := 2;
-      |  while i < arg do
-      |  begin
-      |    if arg / i * i = arg then
-      |    begin
+      |  while i < arg do begin
+      |    if arg / i * i = arg then begin
       |      ret := 0;
       |      i := arg
       |    end;
@@ -188,8 +186,7 @@ object Example2 extends App {
       |procedure primes;
       |begin
       |  arg := 2;
-      |  while arg < max do
-      |  begin
+      |  while arg < max do begin
       |    call isprime;
       |    if ret = 1 then write arg;
       |    arg := arg + 1
