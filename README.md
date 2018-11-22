@@ -67,10 +67,13 @@ object Example1 extends App {
 
 ### output
 
+```
 -23
 5
 expected end of input (line 1, column 3):
 2 +
+  ^
+```
 
 
 Example 2
@@ -286,10 +289,12 @@ object Example2 extends App {
 
 ### output
 
+```
 2
 3
 5
 7
+```
 
 
 Usage
