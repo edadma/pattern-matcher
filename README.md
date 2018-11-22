@@ -93,8 +93,8 @@ object Example2 extends App {
 
       def program = matchall(block <~ ".")
 
-      def const = ident ~ "=" ~ integerLit ^^ {
-        case n ~ _ ~ v => Constant( n, v )
+      def const = pos ~ ident ~ "=" ~ integerLit ^^ {
+        case p ~ n ~ _ ~ v => n -> (p, v)
       }
 
       def consts = opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
@@ -102,9 +102,9 @@ object Example2 extends App {
         case Some( l ) => l
       }
 
-      def vari = ident ~ opt("=" ~> integerLit) ^^ {
-        case n ~ None => Variable( n, 0 )
-        case n ~ Some( v ) => Variable( n, v )
+      def vari = pos ~ ident ~ opt("=" ~> integerLit) ^^ {
+        case p ~ n ~ None => n -> (p, new Var( 0 ))
+        case p ~ n ~ Some( v ) => n -> (p, new Var( v ))
       }
 
       def vars = opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
@@ -112,8 +112,8 @@ object Example2 extends App {
         case Some( l ) => l
       }
 
-      def proc: Matcher[Procedure] = "procedure" ~ ident ~ ";" ~ block ~ ";" ^^ {
-        case _ ~ n ~ _ ~ b ~ _ => Procedure( n, b )
+      def proc: Matcher[(String, (Reader, Block))] = "procedure" ~ pos ~ ident ~ ";" ~ block ~ ";" ^^ {
+        case _ ~ p ~ n ~ _ ~ b ~ _ => n -> (p, b)
       }
 
       def block = consts ~ vars ~ rep(proc) ~ statement ^^ {
@@ -153,16 +153,11 @@ object Example2 extends App {
       case m: matcher.Mismatch => m.print
     }
 
-  def evalBlock( block: Block, outer: List[Map[String, Any]] ): Unit = {
-    val scope =
-      block.decls.map {
-        case Constant( name, value ) => name -> value
-        case Variable( name, init ) => name -> new Var( init )
-        case Procedure( name, body ) => name -> body
-      }.toMap :: outer
-
-    evalStatement( block.stat, scope )
-  }
+  def evalBlock( block: Block, outer: List[Map[String, Any]] ): Unit =
+    block.decls.groupBy(_._1) collectFirst { case (_, _ :: x :: _) => List( x ) } match {
+      case None => evalStatement( block.stat, block.decls.map{case (k, (_, v)) => k -> v}.toMap :: outer )
+      case Some( List((name, (pos, _))) ) => sys.error( pos.longErrorText(s"'$name' is a duplicate") )
+    }
 
   def find( name: String, scope: List[Map[String, Any]] ): Option[(Any, List[Map[String, Any]])] =
     scope match {
@@ -223,12 +218,7 @@ object Example2 extends App {
 
   class Var( var v: Int )
 
-  case class Block( decls: List[Declaration], stat: Statement )
-
-  abstract class Declaration
-  case class Constant( name: String, value: Int ) extends Declaration
-  case class Variable( name: String, init: Int ) extends Declaration
-  case class Procedure( name: String, body: Block ) extends Declaration
+  case class Block( decls: List[(String, (Reader, Any))], stat: Statement )
 
   abstract class Statement
   case class Assign( pos: Reader, name: String, expr: Expression ) extends Statement
