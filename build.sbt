@@ -1,6 +1,6 @@
 name := "pattern-matcher"
 
-version := "0.2.1"
+version := "0.2.2"
 
 scalaVersion := "2.12.7"
 
@@ -23,32 +23,8 @@ libraryDependencies ++= Seq(
 //  "com.typesafe" % "config" % "1.3.3"
 //)
 
-//libraryDependencies ++= Seq(
-//  "jline" % "jline" % "2.14.6"
-//)
-
-libraryDependencies ++= {
-	val akkaV = "2.5.12"
-	Seq(
-//		"com.typesafe.akka" %% "akka-actor"    % akkaV
-//		"com.typesafe.akka" %% "akka-remote"   % akkaV,
-//		"com.typesafe.akka" %% "akka-testkit"  % akkaV    % "test",
-//		"org.specs2"        %% "specs2-core"   % "2.3.11" % "test"
-	)
-}
-
-//libraryDependencies ++= {
-//	val akka_http = "10.1.1"
-//	Seq(
-//		"com.typesafe.akka" %% "akka-http-core"       % akka_http,
-//		"com.typesafe.akka" %% "akka-http"            % akka_http,
-//		"com.typesafe.akka" %% "akka-http-testkit"    % akka_http,
-//		"com.typesafe.akka" %% "akka-http-spray-json" % akka_http,
-//		"com.typesafe.akka" %% "akka-http-jackson"    % akka_http
-//	)
-//}
-
 libraryDependencies ++= Seq(
+  "xyz.hyperreal" %% "dllist" % "0.1"
 )
 
 coverageExcludedPackages := ".*Main"

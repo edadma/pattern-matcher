@@ -1,6 +1,6 @@
 import xyz.hyperreal.pattern_matcher._
 
-object Example1 extends App {
+object Example1 /*extends App*/ {
 
   val matcher =
     new Matchers[StringReader] {

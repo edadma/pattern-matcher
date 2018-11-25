@@ -410,10 +410,10 @@ class Matchers[Input <: Reader] {
 
   def identChar( c: Char ) = c.isLetter | c == '_'
 
-  private def _ident = t(string(cls(identChar) ~ rep(cls(identChar) | digit)))
+  def identOrReserved = t(string(cls(identChar) ~ rep(cls(identChar) | digit)))
 
   def ident: Matcher[String] = { in =>
-    _ident( in ) match {
+    identOrReserved( in ) match {
       case res@Match( m, _ ) =>
         if (reserved contains m)
           Mismatch( s"reserved: '$m'", in )
@@ -432,7 +432,7 @@ class Matchers[Input <: Reader] {
     if (!reserved.contains( s ) && !delimiters.contains( s ))
       in.error( s"not reserved: $s" )
     else
-      (if (identChar( s.head )) _ident else delim).withMessage(s"expected '$s'")( in ) match {
+      (if (identChar( s.head )) identOrReserved else delim).withMessage(s"expected '$s'")( in ) match {
         case res@Match( m, _ ) =>
           if (m == s)
             res
