@@ -53,7 +53,7 @@ class Matchers[Input <: Reader] {
 
     def errorString = next.longErrorText( msg )
 
-    def error = Console.print( errorString ).asInstanceOf[Nothing]
+    def error = Console.print( errorString )
   }
 
   /**
