@@ -51,7 +51,9 @@ class Matchers[Input <: Reader] {
   case class Mismatch( msg: String, next: Input ) extends MatcherResult {
     def map[S]( f: Nothing => S ) = this
 
-    def print = Console.print( next.longErrorText(msg) )
+    def errorString = next.longErrorText( msg )
+
+    def error = Console.print( errorString ).asInstanceOf[Nothing]
   }
 
   /**
