@@ -12,7 +12,7 @@ class Tests extends FreeSpec with PropertyChecks with TestMatchers {
 
 			def input = "[[" ~> (letter*) <~ "]]"
 
-			input( Reader.fromString("[[asdf]]") ).toString shouldBe "Match(List(a, s, d, f),line 1, col 9: [[asdf]])"
+			input( Reader.fromString("[[asdf]]") ).toString shouldBe "Match(List(a, s, d, f),<1, 9>)"
 		}
 	}
 	

@@ -268,7 +268,11 @@ class Matchers[Input <: Reader] {
     }
   }
 
-  def pos: Matcher[Input] = { in => Match( in, in ) }
+  def pos: Matcher[Input] = { in =>
+    whitespace( in ) match {
+      case Match( _, in1 ) => Match( in1, in1 )
+    }
+  }
 
   /**
     * Returns a zero-length matcher that succeeds at the start of input.

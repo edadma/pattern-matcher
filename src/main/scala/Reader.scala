@@ -70,7 +70,7 @@ abstract class Reader {
 
   def longErrorText( msg: String ) = s"$msg (line $line, column $col):\n" + errorText
 
-  override def toString = s"line $line, col $col: $lineString"
+  override def toString = s"<$line, $col>"
 
 }
 
