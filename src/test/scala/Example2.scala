@@ -66,7 +66,7 @@ object Example2 /*extends App*/ {
   def run( s: String ) =
     matcher.program( Reader.fromString(s) ) match {
       case matcher.Match( result, _ ) => evalBlock( result, Nil )
-      case m: matcher.Mismatch => m.print
+      case m: matcher.Mismatch => m.error
     }
 
   def evalBlock( block: Block, outer: List[Map[String, Any]] ): Unit =

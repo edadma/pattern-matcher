@@ -37,7 +37,7 @@ object Example1 /*extends App*/ {
   def run( s: String ) =
     matcher.input( Reader.fromString(s) ) match {
       case matcher.Match( result, _ ) => println( result )
-      case m: matcher.Mismatch => m.print
+      case m: matcher.Mismatch => m.error
     }
 
   run( "-3 + 4 * (-5)" )
