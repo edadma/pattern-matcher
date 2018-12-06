@@ -1,7 +1,7 @@
 //@
 package xyz.hyperreal.pattern_matcher
 
-import java.io.InputStream
+import java.io.{FileInputStream, InputStream}
 
 
 object Reader {
@@ -12,6 +12,8 @@ object Reader {
 
   def fromInputStream( s: InputStream )( implicit codec: io.Codec ) =
     new IteratorReader( io.Source.fromInputStream(s)(codec) )
+
+  def fromFile( file: String )( implicit codec: io.Codec ) = fromInputStream( new FileInputStream(file) )
 
 }
 
