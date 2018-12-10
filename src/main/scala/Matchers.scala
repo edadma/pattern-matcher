@@ -448,7 +448,16 @@ class Matchers[Input <: Reader] {
       }
   }
 
-  def whitespace = rep(space)
+  def whitespace =
+    rep(
+      space |
+      '/' ~ '/' ~ rep(noneOf('\n', EOF)) |
+      '/' ~ '*' ~ rep(noneOf('*')) ~ '*' ~ '/' |
+      '/' ~ '*' ~
+
+    )
+
+  def comment =
 
   def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
 
