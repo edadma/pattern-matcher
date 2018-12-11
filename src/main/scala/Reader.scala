@@ -15,11 +15,11 @@ object Reader {
 
   def fromFile( file: String )( implicit codec: io.Codec ) = fromInputStream( new FileInputStream(file) )
 
+  val EOI = '\u001A'
+
 }
 
 abstract class Reader {
-
-  val EOI = '\u001A'
 
   def tabs: Int
 
@@ -84,7 +84,7 @@ class StringReader private ( s: String, val idx: Int, val line: Int, val col: In
 
   override lazy val ch: Char =
     if (eoi)
-      EOI
+      Reader.EOI
     else
       s.charAt( idx )
 
@@ -139,7 +139,7 @@ class IteratorReader private ( it: Iterator[Char], val line: Int, val col: Int, 
 
   lazy val ch =
     if (eoi)
-      EOI
+      Reader.EOI
     else
       cur
 

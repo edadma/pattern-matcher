@@ -7,7 +7,7 @@ import scala.collection.mutable.ListBuffer
 /**
   * Provides methods for coding character pattern matchers.
   */
-class Matchers[Input <: Reader] {
+trait Matchers[Input <: Reader] {
 
   private val groupmap = new mutable.HashMap[String, (Input, Input)]
 
@@ -451,13 +451,14 @@ class Matchers[Input <: Reader] {
   def whitespace =
     rep(
       space |
-      '/' ~ '/' ~ rep(noneOf('\n', EOF)) |
-      '/' ~ '*' ~ rep(noneOf('*')) ~ '*' ~ '/' |
-      '/' ~ '*' ~
-
+      '/' ~ '/' ~ rep(noneOf('\n', Reader.EOI)) |
+      '/' ~ '*' ~ comment |
+      '/' ~ '*' ~ fail( "unclosed comment" )
     )
 
-  def comment =
+  def comment: Matcher[_] =
+    rep(noneOf('*', Reader.EOI)) ~ '*' ~ '/' |
+    rep(noneOf('*', Reader.EOI)) ~ '*' ~ comment
 
   def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
 
