@@ -5,7 +5,7 @@ Pattern Matcher
 [![Build status](https://ci.appveyor.com/api/projects/status/h5b23n2vd0k4oh9q/branch/master?svg=true)](https://ci.appveyor.com/project/edadma/pattern-matcher/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/edadma/pattern-matcher/badge.svg?branch=master)](https://coveralls.io/github/edadma/pattern-matcher?branch=master)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://github.com/edadma/pattern-matcher/blob/master/LICENSE)
-[![Version](https://img.shields.io/badge/latest_release-v0.2.1-orange.svg)](https://github.com/edadma/pattern-matcher/releases/tag/v0.2.1)
+[![Version](https://img.shields.io/badge/latest_release-v0.2.9-orange.svg)](https://github.com/edadma/pattern-matcher/releases/tag/v0.2.9)
 
 *`pattern-matcher`* is a small combinator parsing library written in Scala mainly as a learning experience. For serious parsing needs, it is recommended to use Scala's `scala-parser-combinators` library.
 
@@ -18,48 +18,45 @@ Here is an example expression parser.
 ```scala
 import xyz.hyperreal.pattern_matcher._
 
-object Example1 extends App {
+object Example1 extends /*App with*/ Matchers[StringReader] {
 
-  val matcher =
-    new Matchers[StringReader] {
-      delimiters += ("+", "-", "*", "/", "(", ")")
+  delimiters += ("+", "-", "*", "/", "(", ")")
 
-      def input = matchall(expression)
+  def input = matchall(expression)
 
-      def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
-        case "+" => _ + _
-        case "-" => _ - _
-      }
+  def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
+    case "+" => _ + _
+    case "-" => _ - _
+  }
 
-      def sign: Matcher[Int => Int] = opt("+" | "-") ^^ {
-        case Some( "-" ) => -_
-        case _ => a => a
-      }
+  def sign: Matcher[Int => Int] = opt("+" | "-") ^^ {
+    case Some( "-" ) => -_
+    case _ => a => a
+  }
 
-      def multiplicative: Matcher[(Int, Int) => Int] = ("*" | "/") ^^ {
-        case "*" => _ * _
-        case "/" => _ / _
-      }
+  def multiplicative: Matcher[(Int, Int) => Int] = ("*" | "/") ^^ {
+    case "*" => _ * _
+    case "/" => _ / _
+  }
 
-      def expression: Matcher[Int] = sign ~ term ~ rep(additive ~ term) ^^ {
-        case s ~ n ~ l => (s(n) /: l) { case (x, f ~ y) => f( x, y ) }
-      }
+  def expression: Matcher[Int] = sign ~ term ~ rep(additive ~ term) ^^ {
+    case s ~ n ~ l => (s(n) /: l) { case (x, f ~ y) => f( x, y ) }
+  }
 
-      def term = factor ~ rep(multiplicative ~ factor) ^^ {
-        case n ~ l => (n /: l) { case (x, f ~ y) => f( x, y ) }
-      }
+  def term = factor ~ rep(multiplicative ~ factor) ^^ {
+    case n ~ l => (n /: l) { case (x, f ~ y) => f( x, y ) }
+  }
 
-      def factor = integerLit | "(" ~> expression <~ ")"
-    }
+  def factor = integerLit | "(" ~> expression <~ ")"
 
   def run( s: String ) =
-    matcher.input( Reader.fromString(s) ) match {
-      case matcher.Match( result, _ ) => println( result )
-      case m: matcher.Mismatch => m.print
+    input( Reader.fromString(s) ) match {
+      case Match( result, _ ) => println( result )
+      case m: Mismatch => m.error
     }
 
-  run( "-3 + 4 * 5" )
-  run( "-5" )
+  run( "-3 + 4 * (-5)" )
+  run( "5" )
   run( "2 +" )
 
 }
@@ -84,73 +81,70 @@ As a longer example, here is an implementation (in under 160 lines of code) of N
 ```scala
 import xyz.hyperreal.pattern_matcher._
 
-object Example2 extends App {
+object Example2 extends /*App with*/ Matchers[StringReader] {
 
-  val matcher =
-    new Matchers[StringReader] {
-      reserved += ("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call")
-      delimiters += ("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!")
+  reserved += ("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call")
+  delimiters += ("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!")
 
-      def program = matchall(block <~ ".")
+  def program = matchall(block <~ ".")
 
-      def const = pos ~ ident ~ "=" ~ integerLit ^^ {
-        case p ~ n ~ _ ~ v => n -> (p, v)
-      }
+  def const = pos ~ ident ~ "=" ~ integerLit ^^ {
+    case p ~ n ~ _ ~ v => n -> (p, v)
+  }
 
-      def consts = opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
-        case None => Nil
-        case Some( l ) => l
-      }
+  def consts = opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
+    case None => Nil
+    case Some( l ) => l
+  }
 
-      def vari = pos ~ ident ~ opt("=" ~> integerLit) ^^ {
-        case p ~ n ~ None => n -> (p, new Var( 0 ))
-        case p ~ n ~ Some( v ) => n -> (p, new Var( v ))
-      }
+  def vari = pos ~ ident ~ opt("=" ~> integerLit) ^^ {
+    case p ~ n ~ None => n -> (p, new Var( 0 ))
+    case p ~ n ~ Some( v ) => n -> (p, new Var( v ))
+  }
 
-      def vars = opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
-        case None => Nil
-        case Some( l ) => l
-      }
+  def vars = opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
+    case None => Nil
+    case Some( l ) => l
+  }
 
-      def proc: Matcher[(String, (Reader, Block))] = "procedure" ~ pos ~ ident ~ ";" ~ block ~ ";" ^^ {
-        case _ ~ p ~ n ~ _ ~ b ~ _ => n -> (p, b)
-      }
+  def proc: Matcher[(String, (Reader, Block))] = "procedure" ~ pos ~ ident ~ ";" ~ block ~ ";" ^^ {
+    case _ ~ p ~ n ~ _ ~ b ~ _ => n -> (p, b)
+  }
 
-      def block = consts ~ vars ~ rep(proc) ~ statement ^^ {
-        case c ~ v ~ p ~ s => Block( c ++ v ++ p, s )
-      }
+  def block = consts ~ vars ~ rep(proc) ~ statement ^^ {
+    case c ~ v ~ p ~ s => Block( c ++ v ++ p, s )
+  }
 
-      def statement: Matcher[Statement] =
-        pos ~ ident ~ ":=" ~ expression ^^ { case p ~ n ~ _ ~ e => Assign( p, n, e ) } |
-        "call" ~ pos ~ ident ^^ { case _ ~ p ~ n => Call( p, n ) } |
-        "!" ~> expression ^^ Write |
-        "begin" ~> rep1sep(statement, ";") <~ "end" ^^ Sequence |
-        "if" ~ condition ~ "then" ~ statement ^^ { case _ ~ c ~ _ ~ s => If( c, s ) } |
-        "while" ~ condition ~ "do" ~ statement ^^ { case _ ~ c ~ _ ~ s => While( c, s ) }
+  def statement: Matcher[Statement] =
+    pos ~ ident ~ ":=" ~ expression ^^ { case p ~ n ~ _ ~ e => Assign( p, n, e ) } |
+    "call" ~ pos ~ ident ^^ { case _ ~ p ~ n => Call( p, n ) } |
+    "!" ~> expression ^^ Write |
+    "begin" ~> rep1sep(statement, ";") <~ "end" ^^ Sequence |
+    "if" ~ condition ~ "then" ~ statement ^^ { case _ ~ c ~ _ ~ s => If( c, s ) } |
+    "while" ~ condition ~ "do" ~ statement ^^ { case _ ~ c ~ _ ~ s => While( c, s ) }
 
-      def condition =
-        "odd" ~> expression ^^ Odd |
-        expression ~ ("="|"#"|"<"|"<="|">"|">=") ~ expression ^^ { case l ~ c ~ r => Comparison( l, c, r ) }
+  def condition =
+    "odd" ~> expression ^^ Odd |
+    expression ~ ("="|"#"|"<"|"<="|">"|">=") ~ expression ^^ { case l ~ c ~ r => Comparison( l, c, r ) }
 
-      def expression: Matcher[Expression] = opt("+" | "-") ~ term ~ rep(("+" | "-") ~ term) ^^ {
-        case (None|Some("+")) ~ t ~ l => (t /: l) { case (x, o ~ y) => Operation( x, o, y ) }
-        case _ ~ t ~ l => ((Negate( t ): Expression) /: l) { case (x, o ~ y) => Operation( x, o, y ) }
-      }
+  def expression: Matcher[Expression] = opt("+" | "-") ~ term ~ rep(("+" | "-") ~ term) ^^ {
+    case (None|Some("+")) ~ t ~ l => (t /: l) { case (x, o ~ y) => Operation( x, o, y ) }
+    case _ ~ t ~ l => ((Negate( t ): Expression) /: l) { case (x, o ~ y) => Operation( x, o, y ) }
+  }
 
-      def term = factor ~ rep(("*" | "/") ~ factor) ^^ {
-        case f ~ l => (f /: l) { case (x, o ~ y) => Operation( x, o, y ) }
-      }
+  def term = factor ~ rep(("*" | "/") ~ factor) ^^ {
+    case f ~ l => (f /: l) { case (x, o ~ y) => Operation( x, o, y ) }
+  }
 
-      def factor =
-        pos ~ ident ^^ { case p ~ v => Ident( p, v ) } |
-        integerLit ^^ Number |
-        "(" ~> expression <~ ")"
-    }
+  def factor =
+    pos ~ ident ^^ { case p ~ v => Ident( p, v ) } |
+    integerLit ^^ Number |
+    "(" ~> expression <~ ")"
 
   def run( s: String ) =
-    matcher.program( Reader.fromString(s) ) match {
-      case matcher.Match( result, _ ) => evalBlock( result, Nil )
-      case m: matcher.Mismatch => m.print
+    program( Reader.fromString(s) ) match {
+      case Match( result, _ ) => evalBlock( result, Nil )
+      case m: Mismatch => m.error
     }
 
   def evalBlock( block: Block, outer: List[Map[String, Any]] ): Unit =
@@ -300,7 +294,7 @@ Use the following definition to use *pattern-matcher* in your Maven project:
 <dependency>
   <groupId>xyz.hyperreal</groupId>
   <artifactId>pattern-matcher</artifactId>
-  <version>0.2.1</version>
+  <version>0.2.9</version>
 </dependency>
 ```
 
@@ -309,7 +303,7 @@ Add the following to your `build.sbt` file to use Backslash in your SBT project:
 ```sbt
 resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
-libraryDependencies += "xyz.hyperreal" %% "pattern-matcher" % "0.2.1"
+libraryDependencies += "xyz.hyperreal" %% "pattern-matcher" % "0.2.9"
 ```
 
 Building

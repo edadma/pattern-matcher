@@ -464,7 +464,25 @@ trait Matchers[Input <: Reader] {
 
   def matchall[R]( m: Matcher[R] ) = m <~ eoi
 
-  def integerLit = t(string(rep1(digit))) ^^ (_.toInt)
+  def digits = rep1(digit) ^^ (_ mkString)
+
+  def integerLit = t(digits) ^^ (_.toInt)
+
+  def floatLit =
+		t(digits ~ '.' ~ digits ~ optExponent ^^ {
+      case intPart ~ _ ~ fracPart ~ exp => java.lang.Double.valueOf( intPart + '.' + fracPart + exp ) } |
+		'.' ~ digits ~ optExponent ^^ { case _ ~ fracPart ~ exp => java.lang.Double.valueOf( '.' + fracPart + exp ) } |
+    digits ~ exponent ^^ { case intPart ~ exp => java.lang.Double.valueOf( intPart + exp ) })
+
+  private def exponent = (ch('e') | 'E') ~ opt(ch('+') | '-') ~ digits ^^ {
+		case e ~ None ~ exp => List(e, exp) mkString
+		case e ~ Some(s) ~ exp => List(e, s, exp) mkString
+	}
+
+	private def optExponent = opt(exponent) ^^ {
+		case None => ""
+		case Some(e) => e
+  }
 
   /**
     * Returns a zero-length matcher that succeeds if the previous input character is a member of a character class.
