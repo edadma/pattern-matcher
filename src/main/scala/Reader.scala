@@ -45,7 +45,7 @@ abstract class Reader {
 
   def lineString: String
 
-  def error( msg: String ) = sys.error( s"$msg: [$line, $col]" )
+  def error( msg: String ) = sys.error( longErrorText(msg) )
 
   def eoiError = error( "end of input" )
 
@@ -59,7 +59,7 @@ abstract class Reader {
 
         buf ++= " "*len
         zcol += len
-      case '\n' => error( "found newline in string from lineString()" )
+      case '\n' => sys.error( "found newline in string from lineString()" )
       case c =>
         buf += c
         zcol += 1

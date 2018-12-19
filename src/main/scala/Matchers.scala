@@ -53,7 +53,7 @@ trait Matchers[Input <: Reader] {
 
     def errorString = next.longErrorText( msg )
 
-    def error = Console.print( errorString )
+    def error = sys.error( errorString )
   }
 
   /**
