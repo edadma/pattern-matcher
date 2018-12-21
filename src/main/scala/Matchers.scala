@@ -342,7 +342,7 @@ trait Matchers[Input <: Reader] {
     * For example
     *
     * {{{
-    *   def stringLit: Matcher[List[Char]] = '"' ~> rep(noneOf('"')) <~ '"'
+    *   def tag: Matcher[String] = '<' ~> (letter|'_') ~ rep(letter|digit|'-'|'_'|'.') <~ '>'
     * }}}
     *
     * @param c the character to be matched
@@ -463,6 +463,10 @@ trait Matchers[Input <: Reader] {
   def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
 
   def matchall[R]( m: Matcher[R] ) = m <~ eoi
+
+  def singleStringLit: Matcher[String] = t('\'' ~> string(rep(noneOf('\'', '\n', Reader.EOI))) <~ '\'')
+
+  def doubleStringLit: Matcher[String] = t('"' ~> string(rep(noneOf('"', '\n', Reader.EOI))) <~ '"')
 
   def digits = rep1(digit) ^^ (_ mkString)
 

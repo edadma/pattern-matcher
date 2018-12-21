@@ -9,11 +9,11 @@ object Main extends App with Matchers[Reader] {
   //reserved += ()
   //delimiters += ()
 
-  def input = matchall(floatLit)
+  def input = matchall(singleStringLit)
 
   val s =
     """
-      |.123
+      |'asdf'
     """.stripMargin
 
   input( Reader.fromString(s) ) match {
