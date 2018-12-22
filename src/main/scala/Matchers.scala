@@ -188,12 +188,12 @@ trait Matchers[Input <: Reader] {
 
   def rep1[S]( m: => Matcher[S] ) = m ~ rep(m) ^^ { case f ~ r => f :: r }
 
-  def rep[S]( m: => Matcher[S] ): Matcher[List[S]] = { in => lazy val m1 = m
+  def rep[S]( m: => Matcher[S] ): Matcher[List[S]] = { in =>
     val buf = new ListBuffer[S]
-    val m2 = m1
+    val m1 = m
 
     def rep( in1: Input ): MatcherResult[List[S]] =
-      m2( in1 ) match {
+      m1( in1 ) match {
         case Match( v, r ) =>
           buf += v
           rep( r )
@@ -201,6 +201,18 @@ trait Matchers[Input <: Reader] {
       }
 
       rep( in )
+  }
+
+  def repu[S]( m: => Matcher[S] ): Matcher[Unit] = { in =>
+    val m1 = m
+
+    def repu( in1: Input ): MatcherResult[Unit] =
+      m1( in1 ) match {
+        case Match( _, r ) => repu( r )
+        case Mismatch( _, _ ) => Match( (), in1 )
+      }
+
+    repu( in )
   }
 
   def rep1sep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) = {
@@ -449,16 +461,16 @@ trait Matchers[Input <: Reader] {
   }
 
   def whitespace =
-    rep(
+    repu(
       space |
-      '/' ~ '/' ~ rep(noneOf('\n', Reader.EOI)) |
+      '/' ~ '/' ~ repu(noneOf('\n', Reader.EOI)) |
       '/' ~ '*' ~ comment |
       '/' ~ '*' ~ fail( "unclosed comment" )
     )
 
-  def comment: Matcher[_] =
-    rep(noneOf('*', Reader.EOI)) ~ '*' ~ '/' |
-    rep(noneOf('*', Reader.EOI)) ~ '*' ~ comment
+  def comment: Matcher[Unit] =
+    repu(noneOf('*', Reader.EOI)) <~ '*' ~ '/' |
+    repu(noneOf('*', Reader.EOI)) <~ '*' ~ comment
 
   def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
 
