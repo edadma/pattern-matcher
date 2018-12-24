@@ -480,6 +480,8 @@ trait Matchers[Input <: Reader] {
 
   def doubleStringLit: Matcher[String] = t('"' ~> string(rep(noneOf('"', '\n', Reader.EOI))) <~ '"')
 
+  def backStringLit: Matcher[String] = t('`' ~> string(rep(noneOf('`', '\n', Reader.EOI))) <~ '`')
+
   def digits = rep1(digit) ^^ (_ mkString)
 
   def integerLit = t(digits) ^^ (_.toInt)
