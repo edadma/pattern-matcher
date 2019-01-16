@@ -460,7 +460,7 @@ trait Matchers[Input <: Reader] {
       }
   }
 
-  val lineComment = '/' ~ '/'
+  val lineComment: Matcher[_] = '/' ~ '/'
 
   def whitespace =
     repu(
