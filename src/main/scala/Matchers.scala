@@ -460,10 +460,12 @@ trait Matchers[Input <: Reader] {
       }
   }
 
+  val lineComment = '/' ~ '/'
+
   def whitespace =
     repu(
       space |
-      '/' ~ '/' ~ repu(noneOf('\n', Reader.EOI)) |
+      lineComment ~ repu(noneOf('\n', Reader.EOI)) |
       '/' ~ '*' ~ comment |
       '/' ~ '*' ~ fail( "unclosed comment" )
     )
