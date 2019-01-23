@@ -1,8 +1,8 @@
 name := "pattern-matcher"
 
-version := "0.2.13"
+version := "0.2.15"
 
-scalaVersion := "2.12.7"
+scalaVersion := "2.12.8"
 
 scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials", "-language:reflectiveCalls" )
 

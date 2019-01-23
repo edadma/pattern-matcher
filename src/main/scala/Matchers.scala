@@ -335,7 +335,7 @@ trait Matchers[Input <: Reader] {
     * @return a matcher for matching character classes
     */
   def cls( pred: Char => Boolean, msg: String = "not in character class" ): Matcher[Char] = { in =>
-    if (in.more && pred( in.ch ))
+    if (pred( in.ch ))
       Match( in.ch, in.next.asInstanceOf[Input] )
     else
       Mismatch( msg, in )
@@ -444,13 +444,13 @@ trait Matchers[Input <: Reader] {
   private lazy val _delim: Matcher[String] =
     (delimiters.toList sortWith (_ > _) map str).foldRight(fail("expected a delimiter"): Matcher[String])(_ | _)
 
-  protected def delim: Matcher[String] = t(_delim)
+  def delimiter: Matcher[String] = t(_delim)
 
   implicit def keyword( s: String ): Matcher[String] = { in: Input =>
     if (!reserved.contains( s ) && !delimiters.contains( s ))
       in.error( s"not reserved: $s" )
     else
-      (if (identChar( s.head )) identOrReserved else delim).withMessage(s"expected '$s'")( in ) match {
+      (if (identChar( s.head )) identOrReserved else delimiter).withMessage(s"expected '$s'")( in ) match {
         case res@Match( m, _ ) =>
           if (m == s)
             res
