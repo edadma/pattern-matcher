@@ -18,7 +18,7 @@ Here is an example expression parser.
 ```scala
 import xyz.hyperreal.pattern_matcher._
 
-object Example1 extends /*App with*/ Matchers[StringReader] {
+object Example1 extends App with Matchers[StringReader] {
 
   delimiters += ("+", "-", "*", "/", "(", ")")
 
@@ -81,7 +81,7 @@ As a longer example, here is an implementation (in under 160 lines of code) of N
 ```scala
 import xyz.hyperreal.pattern_matcher._
 
-object Example2 extends /*App with*/ Matchers[StringReader] {
+object Example2 extends App with Matchers[StringReader] {
 
   reserved += ("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call")
   delimiters += ("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!")
