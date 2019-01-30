@@ -79,14 +79,18 @@ trait Matchers[Input <: Reader] {
       * @tparam S the type of the result value of the second matcher
       * @return the new sequential matcher
       */
-    def ~ [S]( m: => Matcher[S] ): Matcher[R ~ S] = { in =>
-      this( in ) match {
-        case Match( a, in1 ) =>
-          m( in1 ) match {
-            case Match( b, in2 ) => Match( new ~(a, b), in2 )
-            case f => f.asInstanceOf[Mismatch]
-          }
-        case f => f.asInstanceOf[Mismatch]
+    def ~ [S]( m: => Matcher[S] ): Matcher[R ~ S] = {
+      lazy val m1 = m
+
+      { in =>
+        this( in ) match {
+          case Match( a, in1 ) =>
+            m1( in1 ) match {
+              case Match( b, in2 ) => Match( new ~(a, b), in2 )
+              case f => f.asInstanceOf[Mismatch]
+            }
+          case f => f.asInstanceOf[Mismatch]
+        }
       }
     }
 
@@ -115,10 +119,14 @@ trait Matchers[Input <: Reader] {
       * @tparam S the type of the result value of the alternate
       * @return the new matcher
       */
-    def | [S >: R]( m: => Matcher[S] ): Matcher[S] = { in =>
-      this( in ) match {
-        case res: Match[R] => res
-        case _ => m( in )
+    def | [S >: R]( m: => Matcher[S] ): Matcher[S] = {
+      lazy val m1 = m
+
+      { in =>
+        this( in ) match {
+          case res: Match[R] => res
+          case _ => m1( in )
+        }
       }
     }
 
@@ -152,19 +160,27 @@ trait Matchers[Input <: Reader] {
     */
   def clear = groupmap.clear
 
-  def capture[S]( name: String, m: => Matcher[S] ): Matcher[S] = { in =>
-    m( in ) match {
-      case res@Match( _, next ) =>
-        groupmap(name) = (in, next)
-        res
-      case res => res
+  def capture[S]( name: String, m: => Matcher[S] ): Matcher[S] = {
+    lazy val m1 = m
+
+    { in =>
+      m1( in ) match {
+        case res@Match( _, next ) =>
+          groupmap(name) = (in, next)
+          res
+        case res => res
+      }
     }
   }
 
-  def matched[S]( m: => Matcher[S] ): Matcher[(Input, Input)] = { in =>
-    m( in ) match {
-      case Match( _, next ) => Match( (in, next), next )
-      case res => res.asInstanceOf[Mismatch]
+  def matched[S]( m: => Matcher[S] ): Matcher[(Input, Input)] = {
+    lazy val m1 = m
+
+    { in =>
+      m1( in ) match {
+        case Match( _, next ) => Match( (in, next), next )
+        case res => res.asInstanceOf[Mismatch]
+      }
     }
   }
 
@@ -186,39 +202,49 @@ trait Matchers[Input <: Reader] {
   def substring( name: String ) =
     groupmap get name map { case (start, end) => start substring end }
 
-  def rep1[S]( m: => Matcher[S] ) = m ~ rep(m) ^^ { case f ~ r => f :: r }
+  def rep1[S]( m: => Matcher[S] ) = {
+    lazy val m1 = m
 
-  def rep[S]( m: => Matcher[S] ): Matcher[List[S]] = { in =>
-    val buf = new ListBuffer[S]
-    val m1 = m
-
-    def rep( in1: Input ): MatcherResult[List[S]] =
-      m1( in1 ) match {
-        case Match( v, r ) =>
-          buf += v
-          rep( r )
-        case Mismatch( _, _ ) => Match( buf.toList, in1 )
-      }
-
-      rep( in )
+    m1 ~ rep(m1) ^^ { case f ~ r => f :: r }
   }
 
-  def repu[S]( m: => Matcher[S] ): Matcher[Unit] = { in =>
-    val m1 = m
+  def rep[S]( m: => Matcher[S] ): Matcher[List[S]] = {
+    lazy val m1 = m
 
-    def repu( in1: Input ): MatcherResult[Unit] =
-      m1( in1 ) match {
-        case Match( _, r ) => repu( r )
-        case Mismatch( _, _ ) => Match( (), in1 )
-      }
+    { in =>
+      val buf = new ListBuffer[S]
 
-    repu( in )
+      def rep( in1: Input ): MatcherResult[List[S]] =
+        m1( in1 ) match {
+          case Match( v, r ) =>
+            buf += v
+            rep( r )
+          case Mismatch( _, _ ) => Match( buf.toList, in1 )
+        }
+
+      rep( in )
+    }
+  }
+
+  def repu[S]( m: => Matcher[S] ): Matcher[Unit] = {
+    lazy val m1 = m
+
+    { in =>
+      def repu( in1: Input ): MatcherResult[Unit] =
+        m1( in1 ) match {
+          case Match( _, r ) => repu( r )
+          case Mismatch( _, _ ) => Match( (), in1 )
+        }
+
+      repu( in )
+    }
   }
 
   def rep1sep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) = {
-    val m1 = m
+    lazy val m1 = m
+    lazy val s1 = sep
 
-    m1 ~ rep(sep ~> m1) ^^ { case r ~ rs => r :: rs } | succeed( Nil )
+    m1 ~ rep(s1 ~> m1) ^^ { case r ~ rs => r :: rs } | succeed( Nil )
   }
 
   def repsep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) =
@@ -252,7 +278,9 @@ trait Matchers[Input <: Reader] {
     * @tparam S the type of the optional result value
     * @return a matcher with an optional result value
     */
-  def opt[S]( m: => Matcher[S] ) = m ^^ (Some( _ )) | succeed( None )
+  def opt[S]( m: => Matcher[S] ) = {
+    m ^^ (Some( _ )) | succeed( None )
+  }
 
   /**
     * Returns a matcher that negates the result of the given matcher. No input is consumed.
@@ -261,10 +289,14 @@ trait Matchers[Input <: Reader] {
     * @tparam S the type of the result value of the given matcher
     * @return the new matcher
     */
-  def not[S]( m: Matcher[S] ): Matcher[Unit] = { in =>
-    m( in ) match {
-      case Match( _, _ ) => Mismatch( "negation", in )
-      case Mismatch( _, _ ) => Match( (), in )
+  def not[S]( m: => Matcher[S] ): Matcher[Unit] = {
+    lazy val m1 = m
+
+    { in =>
+      m1( in ) match {
+        case Match( _, _ ) => Mismatch( "negation", in )
+        case Mismatch( _, _ ) => Match( (), in )
+      }
     }
   }
 
