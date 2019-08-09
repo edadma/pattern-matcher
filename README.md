@@ -20,7 +20,7 @@ import xyz.hyperreal.pattern_matcher._
 
 object Example1 extends App with Matchers[StringReader] {
 
-  delimiters += ("+", "-", "*", "/", "(", ")")
+  delimiters ++= List( "+", "-", "*", "/", "(", ")" )
 
   def input = matchall(expression)
 
@@ -40,11 +40,11 @@ object Example1 extends App with Matchers[StringReader] {
   }
 
   def expression: Matcher[Int] = sign ~ term ~ rep(additive ~ term) ^^ {
-    case s ~ n ~ l => (s(n) /: l) { case (x, f ~ y) => f( x, y ) }
+    case s ~ n ~ l => (l foldLeft s(n)) { case (x, f ~ y) => f( x, y ) }
   }
 
   def term = factor ~ rep(multiplicative ~ factor) ^^ {
-    case n ~ l => (n /: l) { case (x, f ~ y) => f( x, y ) }
+    case n ~ l => (l foldLeft n) { case (x, f ~ y) => f( x, y ) }
   }
 
   def factor = integerLit | "(" ~> expression <~ ")"
@@ -83,8 +83,8 @@ import xyz.hyperreal.pattern_matcher._
 
 object Example2 extends App with Matchers[StringReader] {
 
-  reserved += ("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call")
-  delimiters += ("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!")
+  reserved ++= List( "const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call" )
+  delimiters ++= List( "+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!" )
 
   def program = matchall(block <~ ".")
 
@@ -128,12 +128,12 @@ object Example2 extends App with Matchers[StringReader] {
     expression ~ ("="|"#"|"<"|"<="|">"|">=") ~ expression ^^ { case l ~ c ~ r => Comparison( l, c, r ) }
 
   def expression: Matcher[Expression] = opt("+" | "-") ~ term ~ rep(("+" | "-") ~ term) ^^ {
-    case (None|Some("+")) ~ t ~ l => (t /: l) { case (x, o ~ y) => Operation( x, o, y ) }
-    case _ ~ t ~ l => ((Negate( t ): Expression) /: l) { case (x, o ~ y) => Operation( x, o, y ) }
+    case (None|Some("+")) ~ t ~ l => (l foldLeft t) { case (x, o ~ y) => Operation( x, o, y ) }
+    case _ ~ t ~ l => (l foldLeft (Negate( t ): Expression)) { case (x, o ~ y) => Operation( x, o, y ) }
   }
 
   def term = factor ~ rep(("*" | "/") ~ factor) ^^ {
-    case f ~ l => (f /: l) { case (x, o ~ y) => Operation( x, o, y ) }
+    case f ~ l => (l foldLeft f) { case (x, o ~ y) => Operation( x, o, y ) }
   }
 
   def factor =
