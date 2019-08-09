@@ -1,14 +1,14 @@
 package xyz.hyperreal.pattern_matcher
 
 import org.scalatest.{Matchers => TestMatchers, _}
-import prop.PropertyChecks
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 
-class Tests extends FreeSpec with PropertyChecks with TestMatchers {
+class Tests extends FreeSpec with ScalaCheckPropertyChecks with TestMatchers {
 	
 	"tests" in {
 		new Matchers[StringReader] {
-			delimiters += ("[[", "]]")
+			delimiters ++= List( "[[", "]]" )
 
 			def input = "[[" ~> (letter*) <~ "]]"
 

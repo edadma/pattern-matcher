@@ -2,7 +2,7 @@ import xyz.hyperreal.pattern_matcher._
 
 object Example1 extends /*App with*/ Matchers[StringReader] {
 
-  delimiters += ("+", "-", "*", "/", "(", ")")
+  delimiters ++= List( "+", "-", "*", "/", "(", ")" )
 
   def input = matchall(expression)
 
@@ -22,11 +22,11 @@ object Example1 extends /*App with*/ Matchers[StringReader] {
   }
 
   def expression: Matcher[Int] = sign ~ term ~ rep(additive ~ term) ^^ {
-    case s ~ n ~ l => (s(n) /: l) { case (x, f ~ y) => f( x, y ) }
+    case s ~ n ~ l => (l foldLeft s(n)) { case (x, f ~ y) => f( x, y ) }
   }
 
   def term = factor ~ rep(multiplicative ~ factor) ^^ {
-    case n ~ l => (n /: l) { case (x, f ~ y) => f( x, y ) }
+    case n ~ l => (l foldLeft n) { case (x, f ~ y) => f( x, y ) }
   }
 
   def factor = integerLit | "(" ~> expression <~ ")"

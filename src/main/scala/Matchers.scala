@@ -522,8 +522,8 @@ trait Matchers[Input <: Reader] {
 
   def floatLit =
 		t(digits ~ '.' ~ digits ~ optExponent ^^ {
-      case intPart ~ _ ~ fracPart ~ exp => java.lang.Double.valueOf( intPart + '.' + fracPart + exp ) } |
-		'.' ~ digits ~ optExponent ^^ { case _ ~ fracPart ~ exp => java.lang.Double.valueOf( '.' + fracPart + exp ) } |
+      case intPart ~ _ ~ fracPart ~ exp => java.lang.Double.valueOf( s"$intPart.$fracPart$exp" ) } |
+		'.' ~ digits ~ optExponent ^^ { case _ ~ fracPart ~ exp => java.lang.Double.valueOf( s".$fracPart$exp" ) } |
     digits ~ exponent ^^ { case intPart ~ exp => java.lang.Double.valueOf( intPart + exp ) })
 
   private def exponent = (ch('e') | 'E') ~ opt(ch('+') | '-') ~ digits ^^ {

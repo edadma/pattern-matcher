@@ -190,7 +190,7 @@ class CharReader( val tabs: Int, val ch: Char, val next: Reader, val prev: Char,
 
   val eoi = false
 
-  def substring( end:  Reader ) = ch + next.substring( end )
+  def substring( end:  Reader ) = s"$ch${next.substring( end )}"
 
   def lineString: String = ???
 
