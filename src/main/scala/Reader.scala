@@ -10,8 +10,9 @@ object Reader {
 
   def fromInputStream( s: InputStream, enc: String ): IteratorReader = fromInputStream( s )( io.Codec(enc) )
 
-  def fromInputStream( s: InputStream )( implicit codec: io.Codec ) =
-    new IteratorReader( io.Source.fromInputStream(s)(codec) )
+  def fromInputStream( s: InputStream )( implicit codec: io.Codec ) = fromSource( io.Source.fromInputStream(s)(codec) )
+
+  def fromSource( s: io.Source ) = new IteratorReader( s )
 
   def fromFile( file: String )( implicit codec: io.Codec ) = fromInputStream( new FileInputStream(file) )
 
