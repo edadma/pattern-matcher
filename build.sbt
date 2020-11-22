@@ -1,8 +1,8 @@
 name := "pattern-matcher"
 
-version := "0.3.1"
+version := "0.3.2"
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.13.3"
 
 scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials", "-language:reflectiveCalls" )
 
@@ -10,7 +10,7 @@ organization := "xyz.hyperreal"
 
 //resolvers += Resolver.sonatypeRepo( "snapshots" )
 
-resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
 
 resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
 //)
 
 libraryDependencies ++= Seq(
-  "xyz.hyperreal" %% "dllist" % "0.3"
+  "xyz.hyperreal" %% "char-reader" % "0.1.0-snapshot.5"
 )
 
 coverageExcludedPackages := ".*Main"

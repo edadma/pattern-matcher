@@ -1,11 +1,9 @@
 package xyz.hyperreal.pattern_matcher
 
-import scala.collection.mutable.ArrayBuffer
-
-import xyz.hyperreal.dllist.DLList
+import xyz.hyperreal.char_reader.CharReader
 
 
-object Main extends App with Matchers[Reader] {
+object Main extends App with Matchers[CharReader] {
   //reserved += ()
   //delimiters += ()
 
@@ -16,7 +14,7 @@ object Main extends App with Matchers[Reader] {
       |'asdf'
     """.stripMargin
 
-  input( Reader.fromString(s) ) match {
+  input( CharReader.fromString(s) ) match {
     case Match( result, _ ) => println( result )
     case m: Mismatch => m.error
   }

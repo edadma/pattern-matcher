@@ -1,13 +1,15 @@
 //@
 package xyz.hyperreal.pattern_matcher
 
+import xyz.hyperreal.char_reader.CharReader
+
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 /**
   * Provides methods for coding character pattern matchers.
   */
-trait Matchers[Input <: Reader] {
+trait Matchers[Input <: CharReader] {
 
   private val groupmap = new mutable.HashMap[String, (Input, Input)]
 
@@ -158,7 +160,7 @@ trait Matchers[Input <: Reader] {
   /**
     * Clears capture groups.
     */
-  def clear = groupmap.clear
+  def clear(): Unit = groupmap.clear()
 
   def capture[S]( name: String, m: => Matcher[S] ): Matcher[S] = {
     lazy val m1 = m
@@ -339,7 +341,7 @@ trait Matchers[Input <: Reader] {
     */
   def eoi: Matcher[Unit] =
     in =>
-      if (in.eoi)
+      if (in.none)
         Match( (), in )
       else
         Mismatch( "expected end of input", in )
@@ -409,7 +411,7 @@ trait Matchers[Input <: Reader] {
   def str( s: String ): Matcher[String] = { in =>
     def str( idx: Int, in1: Input ): MatcherResult[String] =
       if (idx < s.length)
-        if (in1.more && s.charAt( idx ) == in1.ch)
+        if (in1.some && s.charAt( idx ) == in1.ch)
           str( idx + 1, in1.next.asInstanceOf[Input] )
         else
           Mismatch( s"expected '$s'", in1 )
@@ -494,27 +496,27 @@ trait Matchers[Input <: Reader] {
 
   val lineComment: Matcher[_] = '/' ~ '/'
 
-  def whitespace =
+  def whitespace: Matcher[Unit] =
     repu(
       space |
-      lineComment ~ repu(noneOf('\n', Reader.EOI)) |
+      lineComment ~ repu(noneOf('\n', CharReader.EOI)) |
       '/' ~ '*' ~ comment |
       '/' ~ '*' ~ fail( "unclosed comment" )
     )
 
   def comment: Matcher[Unit] =
-    repu(noneOf('*', Reader.EOI)) <~ '*' ~ '/' |
-    repu(noneOf('*', Reader.EOI)) <~ '*' ~ comment
+    repu(noneOf('*', CharReader.EOI)) <~ '*' ~ '/' |
+    repu(noneOf('*', CharReader.EOI)) <~ '*' ~ comment
 
   def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
 
   def matchall[R]( m: Matcher[R] ) = m <~ eoi
 
-  def singleStringLit: Matcher[String] = t('\'' ~> string(rep(noneOf('\'', '\n', Reader.EOI))) <~ '\'')
+  def singleStringLit: Matcher[String] = t('\'' ~> string(rep(noneOf('\'', '\n', CharReader.EOI))) <~ '\'')
 
-  def doubleStringLit: Matcher[String] = t('"' ~> string(rep(noneOf('"', '\n', Reader.EOI))) <~ '"')
+  def doubleStringLit: Matcher[String] = t('"' ~> string(rep(noneOf('"', '\n', CharReader.EOI))) <~ '"')
 
-  def backStringLit: Matcher[String] = t('`' ~> string(rep(noneOf('`', '\n', Reader.EOI))) <~ '`')
+  def backStringLit: Matcher[String] = t('`' ~> string(rep(noneOf('`', '\n', CharReader.EOI))) <~ '`')
 
   def digits = rep1(digit) ^^ (_ mkString)
 

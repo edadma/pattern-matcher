@@ -1,6 +1,7 @@
+import xyz.hyperreal.char_reader.CharReader
 import xyz.hyperreal.pattern_matcher._
 
-object Example2 extends /*App with*/ Matchers[StringReader] {
+object Example2 extends /*App with*/ Matchers[CharReader] {
 
   reserved ++= List( "const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call" )
   delimiters ++= List( "+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!" )
@@ -26,7 +27,7 @@ object Example2 extends /*App with*/ Matchers[StringReader] {
     case Some( l ) => l
   }
 
-  def proc: Matcher[(String, (Reader, Block))] = "procedure" ~ pos ~ ident ~ ";" ~ block ~ ";" ^^ {
+  def proc: Matcher[(String, (CharReader, Block))] = "procedure" ~ pos ~ ident ~ ";" ~ block ~ ";" ^^ {
     case _ ~ p ~ n ~ _ ~ b ~ _ => n -> (p, b)
   }
 
@@ -61,7 +62,7 @@ object Example2 extends /*App with*/ Matchers[StringReader] {
     "(" ~> expression <~ ")"
 
   def run( s: String ) =
-    program( Reader.fromString(s) ) match {
+    program( CharReader.fromString(s) ) match {
       case Match( result, _ ) => evalBlock( result, Nil )
       case m: Mismatch => m.error
     }
@@ -131,11 +132,11 @@ object Example2 extends /*App with*/ Matchers[StringReader] {
 
   class Var( var v: Int )
 
-  case class Block( decls: List[(String, (Reader, Any))], stat: Statement )
+  case class Block( decls: List[(String, (CharReader, Any))], stat: Statement )
 
   abstract class Statement
-  case class Assign( pos: Reader, name: String, expr: Expression ) extends Statement
-  case class Call( pos: Reader, name: String ) extends Statement
+  case class Assign( pos: CharReader, name: String, expr: Expression ) extends Statement
+  case class Call( pos: CharReader, name: String ) extends Statement
   case class Write( expr: Expression ) extends Statement
   case class Sequence( stats: List[Statement] ) extends Statement
   case class If( cond: Condition, stat: Statement ) extends Statement
@@ -149,7 +150,7 @@ object Example2 extends /*App with*/ Matchers[StringReader] {
   case class Negate( x: Expression ) extends Expression
   case class Operation( left: Expression, op: String, right: Expression ) extends Expression
   case class Number( n: Int ) extends Expression
-  case class Ident( pos: Reader, name: String ) extends Expression
+  case class Ident( pos: CharReader, name: String ) extends Expression
 
   run(
     """

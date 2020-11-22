@@ -1,6 +1,7 @@
+import xyz.hyperreal.char_reader.CharReader
 import xyz.hyperreal.pattern_matcher._
 
-object Example1 extends /*App with*/ Matchers[StringReader] {
+object Example1 extends /*App with*/ Matchers[CharReader] {
 
   delimiters ++= List( "+", "-", "*", "/", "(", ")" )
 
@@ -32,7 +33,7 @@ object Example1 extends /*App with*/ Matchers[StringReader] {
   def factor = integerLit | "(" ~> expression <~ ")"
 
   def run( s: String ) =
-    input( Reader.fromString(s) ) match {
+    input( CharReader.fromString(s) ) match {
       case Match( result, _ ) => println( result )
       case m: Mismatch => m.error
     }
