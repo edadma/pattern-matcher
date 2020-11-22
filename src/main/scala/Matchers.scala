@@ -427,7 +427,7 @@ trait Matchers[Input <: CharReader] {
         if (in1.some && s.charAt(idx) == in1.ch)
           str(idx + 1, in1.next.asInstanceOf[Input])
         else
-          Mismatch(s"expected '$s'", in1)
+          Mismatch(s"expected '$s'", in)
       else
         Match(s, in1)
 

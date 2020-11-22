@@ -3,9 +3,7 @@ import xyz.hyperreal.pattern_matcher._
 
 object Example1 extends /*App with*/ Matchers[CharReader] {
 
-  delimiters ++= List( "+", "-", "*", "/", "(", ")" )
-
-  override def keyword(s: String ): Matcher[String] = ???
+  delimiters ++= List("+", "-", "*", "/", "(", ")")
 
   def input: Example1.Matcher[Int] = matchall(expression)
 
@@ -15,8 +13,8 @@ object Example1 extends /*App with*/ Matchers[CharReader] {
   }
 
   def sign: Matcher[Int => Int] = opt("+" | "-") ^^ {
-    case Some( "-" ) => -_
-    case _ => a => a
+    case Some("-") => -_
+    case _         => identity
   }
 
   def multiplicative: Matcher[(Int, Int) => Int] = ("*" | "/") ^^ {
@@ -25,23 +23,23 @@ object Example1 extends /*App with*/ Matchers[CharReader] {
   }
 
   def expression: Matcher[Int] = sign ~ term ~ rep(additive ~ term) ^^ {
-    case s ~ n ~ l => (l foldLeft s(n)) { case (x, f ~ y) => f( x, y ) }
+    case s ~ n ~ l => (l foldLeft s(n)) { case (x, f ~ y) => f(x, y) }
   }
 
   def term: Example1.Matcher[Int] = factor ~ rep(multiplicative ~ factor) ^^ {
-    case n ~ l => (l foldLeft n) { case (x, f ~ y) => f( x, y ) }
+    case n ~ l => (l foldLeft n) { case (x, f ~ y) => f(x, y) }
   }
 
   def factor: Example1.Matcher[Int] = integerLit | "(" ~> expression <~ ")"
 
-  def run( s: String ): Unit =
-    input( CharReader.fromString(s) ) match {
-      case Match( result, _ ) => println( result )
-      case m: Mismatch => m.error
+  def run(s: String): Unit =
+    input(CharReader.fromString(s)) match {
+      case Match(result, _) => println(result)
+      case m: Mismatch      => m.error
     }
 
-  run( "-3 + 4 * (-5)" )
-  run( "5" )
-  run( "2 +" )
+  run("-3 + 4 * (-5)")
+  run("5")
+  run("2 +")
 
 }
