@@ -1,6 +1,6 @@
 name := "pattern-matcher"
 
-version := "0.3.6"
+version := "0.3.7"
 
 scalaVersion := "2.13.3"
 

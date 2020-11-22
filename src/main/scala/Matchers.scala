@@ -269,8 +269,8 @@ trait Matchers[Input <: CharReader] {
     * @return a matcher that only matches a character from a list
     */
   def anyOf(cs: Char*): Matcher[Char] =
-    cls(cs contains _,
-        "expected one of: " + cs.map(c => s"'$c'").mkString(", "))
+    elem(cs contains _,
+         "expected one of: " + cs.map(c => s"'$c'").mkString(", "))
 
   /**
     * Returns a matcher that will matcher any character not in a list of characters.
@@ -279,8 +279,8 @@ trait Matchers[Input <: CharReader] {
     * @return a matcher that only matches a character not on a list
     */
   def noneOf(cs: Char*): Matcher[Char] =
-    cls(!cs.contains(_),
-        "not expecting any of: " + cs.map(c => s"'$c'").mkString(", "))
+    notElem(cs contains _,
+            "not expecting any of: " + cs.map(c => s"'$c'").mkString(", "))
 
   /**
     * Returns a matcher that allows a matcher to succeed optionally.
@@ -379,20 +379,24 @@ trait Matchers[Input <: CharReader] {
     * @param pred predicate that determines if the current input character matches
     * @return a matcher for matching character classes
     */
-  def cls(pred: Char => Boolean,
-          msg: String = "not in character class"): Matcher[Char] = { in =>
+  def elem(pred: Char => Boolean,
+           msg: String = "not in character class"): Matcher[Char] = { in =>
     if (in.some && pred(in.ch))
       Match(in.ch, in.next.asInstanceOf[Input])
     else
       Mismatch(msg, in)
   }
 
+  def notElem(pred: Char => Boolean,
+              msg: String = "in character class"): Matcher[Char] =
+    elem(!pred(_))
+
   /**
     * Returns a matcher that always succeeds as long as there is input remaining, matching one character.
     *
     * @return a matcher with the next input character as its result value, failing if there is no more input
     */
-  def char: Matcher[Char] = cls(_ => true)
+  def char: Matcher[Char] = elem(_ => true)
 
   /**
     * Returns a matcher for a specific character. This combinator is an implicit function so that character literals can be lifted to the corresponding character matcher.
@@ -406,7 +410,7 @@ trait Matchers[Input <: CharReader] {
     * @param c the character to be matched
     * @return the character matcher
     */
-  implicit def ch(c: Char): Matcher[Char] = cls(_ == c, s"expected '$c'")
+  implicit def ch(c: Char): Matcher[Char] = elem(_ == c, s"expected '$c'")
 
   /**
     * Returns a matcher to match against a string.
@@ -453,31 +457,31 @@ trait Matchers[Input <: CharReader] {
   val delimiters = new mutable.HashSet[String]
 
   /** Returns a hex digit character matcher. */
-  def hexdigit: Matcher[Char] = cls(HEXDIGITSET, "expected hexadecimal digit")
+  def hexdigit: Matcher[Char] = elem(HEXDIGITSET, "expected hexadecimal digit")
 
   /** Returns a letter or digit character matcher. */
   def letterOrDigit: Matcher[Char] =
-    cls(_.isLetterOrDigit, "expected a letter or digit")
+    elem(_.isLetterOrDigit, "expected a letter or digit")
 
   /** Returns a letter character matcher. */
-  def letter: Matcher[Char] = cls(_.isLetter, "expected a letter")
+  def letter: Matcher[Char] = elem(_.isLetter, "expected a letter")
 
   /** Returns a lower case character matcher. */
-  def lower: Matcher[Char] = cls(_.isLower, "expected a lower case letter")
+  def lower: Matcher[Char] = elem(_.isLower, "expected a lower case letter")
 
   /** Returns an upper case character matcher. */
-  def upper: Matcher[Char] = cls(_.isUpper, "expected an upper case letter")
+  def upper: Matcher[Char] = elem(_.isUpper, "expected an upper case letter")
 
   /** Returns a digit character matcher. */
-  def digit: Matcher[Char] = cls(_.isDigit, "expected a digit")
+  def digit: Matcher[Char] = elem(_.isDigit, "expected a digit")
 
   /** Returns a space character matcher. */
-  def space: Matcher[Char] = cls(_.isWhitespace, "expected a space character")
+  def space: Matcher[Char] = elem(_.isWhitespace, "expected a space character")
 
   def identChar(c: Char): Boolean = c.isLetter | c == '_'
 
   def identOrReserved: Matcher[String] =
-    t(string(cls(identChar) ~ rep(cls(identChar) | digit)))
+    t(string(elem(identChar) ~ rep(elem(identChar) | digit)))
 
   def ident: Matcher[String] = { in =>
     identOrReserved(in) match {
