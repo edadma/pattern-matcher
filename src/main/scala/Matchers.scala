@@ -1,6 +1,8 @@
 //@
 package xyz.hyperreal.pattern_matcher
 
+import java.lang
+
 import xyz.hyperreal.char_reader.CharReader
 
 import scala.collection.mutable
@@ -42,7 +44,7 @@ trait Matchers[Input <: CharReader] {
     * @tparam R type of result value
     */
   case class Match[R]( result: R, next: Input ) extends MatcherResult[R] {
-    def map[S]( f: R => S ) = Match( f(result), next )
+    def map[S]( f: R => S ): MatcherResult[S] = Match( f(result), next )
   }
 
   /**
@@ -51,11 +53,11 @@ trait Matchers[Input <: CharReader] {
     * @param next character at which the mismatch occurred
     */
   case class Mismatch( msg: String, next: Input ) extends MatcherResult {
-    def map[S]( f: Nothing => S ) = this
+    def map[S]( f: Nothing => S ): MatcherResult[S] = this
 
-    def errorString = next.longErrorText( msg )
+    def errorString: String = next.longErrorText( msg )
 
-    def error = sys.error( errorString )
+    def error: Nothing = sys.error( errorString )
   }
 
   /**
@@ -103,7 +105,7 @@ trait Matchers[Input <: CharReader] {
       * @tparam S the type of the result value of the second matcher
       * @return the new matcher
       */
-    def <~ [S]( m: => Matcher[S] ) = (this ~ m) ^^ { case a ~ _ => a }
+    def <~ [S]( m: => Matcher[S] ): Matcher[R] = (this ~ m) ^^ { case a ~ _ => a }
 
     /**
       * Returns a matcher that applies this matcher and another one sequentially and whose result value is that of the second matcher.
@@ -112,7 +114,7 @@ trait Matchers[Input <: CharReader] {
       * @tparam S the type of the result value of the second matcher
       * @return the new matcher
       */
-    def ~> [S]( m: => Matcher[S] ) = (this ~ m) ^^ { case _ ~ b => b }
+    def ~> [S]( m: => Matcher[S] ): Matcher[S] = (this ~ m) ^^ { case _ ~ b => b }
 
     /**
       * Returns a matcher that applies this matcher or alternatively another matcher if this matcher fails.
@@ -138,15 +140,15 @@ trait Matchers[Input <: CharReader] {
       * @param f the function applied to the result value
       * @tparam S the type of the transformed result value
       */
-    def ^^ [S]( f: R => S ) = map( f )
+    def ^^ [S]( f: R => S ): Matcher[S] = map( f )
 
-    def ^^^ [S]( v: => S ) = map (_ => v)
+    def ^^^ [S]( v: => S ): Matcher[S] = map (_ => v)
 
-    def * = rep(this)
+    def * : Matcher[List[R]] = rep(this)
 
-    def + = rep1(this)
+    def + : Matcher[List[R]] = rep1(this)
 
-    def ? = opt(this)
+    def ? : Matcher[Option[R]] = opt(this)
 
     def withMessage( msg: String ): Matcher[R] = { in =>
       this(in) match {
@@ -186,7 +188,7 @@ trait Matchers[Input <: CharReader] {
     }
   }
 
-  def string[S]( m: => Matcher[S] ) = matched(m) ^^ { case (s, e) => s substring e }
+  def string[S]( m: => Matcher[S] ): Matcher[String] = matched(m) ^^ { case (s, e) => s substring e }
 
   /**
     * Returns capture group.
@@ -194,17 +196,17 @@ trait Matchers[Input <: CharReader] {
     * @param name the name of the capture group to return
     * @return a capture group with is a pair of input objects: the first is the first character in the group, the second is the next input character after the end of the group.
     */
-  def group( name: String ) = groupmap get name
+  def group( name: String ): Option[(Input, Input)] = groupmap get name
 
   /**
     * Returns the substring from a capture group.
     *
     * @param name the name of the capture group
     */
-  def substring( name: String ) =
+  def substring( name: String ): Option[String] =
     groupmap get name map { case (start, end) => start substring end }
 
-  def rep1[S]( m: => Matcher[S] ) = {
+  def rep1[S]( m: => Matcher[S] ): Matcher[List[S]] = {
     lazy val m1 = m
 
     m1 ~ rep(m1) ^^ { case f ~ r => f :: r }
@@ -216,7 +218,8 @@ trait Matchers[Input <: CharReader] {
     { in =>
       val buf = new ListBuffer[S]
 
-      def rep( in1: Input ): MatcherResult[List[S]] =
+      @scala.annotation.tailrec
+      def rep(in1: Input ): MatcherResult[List[S]] =
         m1( in1 ) match {
           case Match( v, r ) =>
             buf += v
@@ -232,7 +235,8 @@ trait Matchers[Input <: CharReader] {
     lazy val m1 = m
 
     { in =>
-      def repu( in1: Input ): MatcherResult[Unit] =
+      @scala.annotation.tailrec
+      def repu(in1: Input ): MatcherResult[Unit] =
         m1( in1 ) match {
           case Match( _, r ) => repu( r )
           case Mismatch( _, _ ) => Match( (), in1 )
@@ -242,14 +246,14 @@ trait Matchers[Input <: CharReader] {
     }
   }
 
-  def rep1sep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) = {
+  def rep1sep[T, U]( m: => Matcher[T], sep: => Matcher[U] ): Matcher[List[T]] = {
     lazy val m1 = m
     lazy val s1 = sep
 
     m1 ~ rep(s1 ~> m1) ^^ { case r ~ rs => r :: rs } | succeed( Nil )
   }
 
-  def repsep[T, U]( m: => Matcher[T], sep: => Matcher[U] ) =
+  def repsep[T, U]( m: => Matcher[T], sep: => Matcher[U] ): Matcher[List[T]] =
     opt(rep1sep( m, sep )) ^^ {
       case None => Nil
       case Some( l ) => l
@@ -261,7 +265,7 @@ trait Matchers[Input <: CharReader] {
     * @param cs argument list of characters
     * @return a matcher that only matches a character from a list
     */
-  def anyOf( cs: Char* ) =
+  def anyOf( cs: Char* ): Matcher[Char] =
     cls( cs contains _, "expected one of: " + cs.map(c => s"'$c'").mkString(", ") )
 
   /**
@@ -270,7 +274,7 @@ trait Matchers[Input <: CharReader] {
     * @param cs argument list of characters
     * @return a matcher that only matches a character not on a list
     */
-  def noneOf( cs: Char* ) =
+  def noneOf( cs: Char* ): Matcher[Char] =
     cls( !cs.contains(_), "not expecting any of: " + cs.map(c => s"'$c'").mkString(", ") )
 
   /**
@@ -280,7 +284,7 @@ trait Matchers[Input <: CharReader] {
     * @tparam S the type of the optional result value
     * @return a matcher with an optional result value
     */
-  def opt[S]( m: => Matcher[S] ) = {
+  def opt[S]( m: => Matcher[S] ): Matcher[Option[S]] = {
     m ^^ (Some( _ )) | succeed( None )
   }
 
@@ -380,10 +384,10 @@ trait Matchers[Input <: CharReader] {
     *
     * @return a matcher with the next input character as its result value, failing if there is no more input
     */
-  def char = cls( _ => true )
+  def char: Matcher[Char] = cls(_ => true )
 
   /**
-    * Returns a matcher for a specific character. This combinator is an implicit function to that character literals can be lifted to the corresponding character matcher.
+    * Returns a matcher for a specific character. This combinator is an implicit function so that character literals can be lifted to the corresponding character matcher.
     *
     * For example
     *
@@ -397,7 +401,7 @@ trait Matchers[Input <: CharReader] {
   implicit def ch( c: Char ): Matcher[Char] = cls( _ == c, s"expected '$c'" )
 
   /**
-    * Returns a matcher to match against a string. This combinator is an implicit function to that string literals can be lifted to the corresponding string matcher.
+    * Returns a matcher to match against a string.
     *
     * For example
     *
@@ -409,7 +413,8 @@ trait Matchers[Input <: CharReader] {
     * @return a matcher that matches against a string, with that string as its result value if it succeeds
     */
   def str( s: String ): Matcher[String] = { in =>
-    def str( idx: Int, in1: Input ): MatcherResult[String] =
+    @scala.annotation.tailrec
+    def str(idx: Int, in1: Input ): MatcherResult[String] =
       if (idx < s.length)
         if (in1.some && s.charAt( idx ) == in1.ch)
           str( idx + 1, in1.next.asInstanceOf[Input] )
@@ -440,29 +445,29 @@ trait Matchers[Input <: CharReader] {
   val delimiters = new mutable.HashSet[String]
 
   /** Returns a hex digit character matcher. */
-  def hexdigit = cls( HEXDIGITSET, "expected hexadecimal digit" )
+  def hexdigit: Matcher[Char] = cls( HEXDIGITSET, "expected hexadecimal digit" )
 
   /** Returns a letter or digit character matcher. */
-  def letterOrDigit = cls( _.isLetterOrDigit, "expected a letter or digit" )
+  def letterOrDigit: Matcher[Char] = cls( _.isLetterOrDigit, "expected a letter or digit" )
 
   /** Returns a letter character matcher. */
-  def letter = cls( _.isLetter, "expected a letter" )
+  def letter: Matcher[Char] = cls( _.isLetter, "expected a letter" )
 
   /** Returns a lower case character matcher. */
-  def lower = cls( _.isLower, "expected a lower case letter" )
+  def lower: Matcher[Char] = cls( _.isLower, "expected a lower case letter" )
 
   /** Returns an upper case character matcher. */
-  def upper = cls( _.isUpper, "expected an upper case letter" )
+  def upper: Matcher[Char] = cls( _.isUpper, "expected an upper case letter" )
 
   /** Returns a digit character matcher. */
-  def digit = cls( _.isDigit, "expected a digit" )
+  def digit: Matcher[Char] = cls( _.isDigit, "expected a digit" )
 
   /** Returns a space character matcher. */
-  def space = cls( _.isWhitespace, "expected a space character" )
+  def space: Matcher[Char] = cls( _.isWhitespace, "expected a space character" )
 
-  def identChar( c: Char ) = c.isLetter | c == '_'
+  def identChar( c: Char ): Boolean = c.isLetter | c == '_'
 
-  def identOrReserved = t(string(cls(identChar) ~ rep(cls(identChar) | digit)))
+  def identOrReserved: Matcher[String] = t(string(cls(identChar) ~ rep(cls(identChar) | digit)))
 
   def ident: Matcher[String] = { in =>
     identOrReserved( in ) match {
@@ -508,9 +513,9 @@ trait Matchers[Input <: CharReader] {
     repu(noneOf('*', CharReader.EOI)) <~ '*' ~ '/' |
     repu(noneOf('*', CharReader.EOI)) <~ '*' ~ comment
 
-  def t[S]( m: => Matcher[S] ) = whitespace ~> m <~ whitespace
+  def t[S]( m: => Matcher[S] ): Matcher[S] = whitespace ~> m <~ whitespace
 
-  def matchall[R]( m: Matcher[R] ) = m <~ eoi
+  def matchall[R]( m: Matcher[R] ): Matcher[R] = m <~ eoi
 
   def singleStringLit: Matcher[String] = t('\'' ~> string(rep(noneOf('\'', '\n', CharReader.EOI))) <~ '\'')
 
@@ -518,11 +523,11 @@ trait Matchers[Input <: CharReader] {
 
   def backStringLit: Matcher[String] = t('`' ~> string(rep(noneOf('`', '\n', CharReader.EOI))) <~ '`')
 
-  def digits = rep1(digit) ^^ (_ mkString)
+  def digits: Matcher[String] = rep1(digit) ^^ (_ mkString)
 
-  def integerLit = t(digits) ^^ (_.toInt)
+  def integerLit: Matcher[Int] = t(digits) ^^ (_.toInt)
 
-  def floatLit =
+  def floatLit: Matcher[lang.Double] =
 		t(digits ~ '.' ~ digits ~ optExponent ^^ {
       case intPart ~ _ ~ fracPart ~ exp => java.lang.Double.valueOf( s"$intPart.$fracPart$exp" ) } |
 		'.' ~ digits ~ optExponent ^^ { case _ ~ fracPart ~ exp => java.lang.Double.valueOf( s".$fracPart$exp" ) } |
