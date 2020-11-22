@@ -540,25 +540,14 @@ trait Matchers[Input <: CharReader] {
 
   def digits: Matcher[String] = rep1(digit) ^^ (_ mkString)
 
-  def float: Matcher[String] =
+  def integerLit: Matcher[Int] = t(digits) ^^ (_.toInt)
+
+  def floatLit: Matcher[Double] =
     t(
       string(
         digits ~ '.' ~ digits ~ optExponent |
           '.' ~ digits ~ optExponent |
-          digits ~ exponent))
-
-  def integerLit: Matcher[Int] = t(digits) ^^ (_.toInt)
-
-  def doubleLit: Matcher[Double] = float ^^ (_.toDouble)
-
-  def numberLit: Matcher[Number] =
-    float ^^ { s =>
-      val d = BigDecimal(s)
-
-      if (d.isValidInt) d.toInt
-      else if (d.isWhole) d.toBigInt
-      else d.toDouble
-    }
+          digits ~ exponent)) ^^ (_.toDouble)
 
   private def exponent = (ch('e') | 'E') ~ opt(ch('+') | '-') ~ digits ^^ {
     case e ~ None ~ exp    => List(e, exp) mkString
