@@ -381,14 +381,14 @@ trait Matchers[Input <: CharReader] {
     */
   def cls(pred: Char => Boolean,
           msg: String = "not in character class"): Matcher[Char] = { in =>
-    if (pred(in.ch))
+    if (in.some && pred(in.ch))
       Match(in.ch, in.next.asInstanceOf[Input])
     else
       Mismatch(msg, in)
   }
 
   /**
-    * Returns a matcher that always succeeds as long as there is input remaining.
+    * Returns a matcher that always succeeds as long as there is input remaining, matching one character.
     *
     * @return a matcher with the next input character as its result value, failing if there is no more input
     */

@@ -2,26 +2,23 @@ package xyz.hyperreal.pattern_matcher
 
 import xyz.hyperreal.char_reader.CharReader
 
-
 object Main extends App with Matchers[CharReader] {
   //reserved += ()
   //delimiters += ()
 
-  def input = matchall(singleStringLit)
+  def input = matchall(rep(char))
 
-  val s =
-    """
-      |'asdf'
-    """.stripMargin
+  val s = "a"
+//    """
+//      |'asdf'
+//    """.stripMargin
 
-  input( CharReader.fromString(s) ) match {
-    case Match( result, _ ) => println( result )
-    case m: Mismatch => m.error
+  input(CharReader.fromString(s)) match {
+    case Match(result, _) => println(result)
+    case m: Mismatch      => m.error
   }
 
 }
-
-
 //  val matcher =
 //    new Matchers[StringReader] {
 //      delimiters += ("+", "-", "*", "/", "(", ")")
