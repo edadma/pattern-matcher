@@ -540,20 +540,25 @@ trait Matchers[Input <: CharReader] {
 
   def digits: Matcher[String] = rep1(digit) ^^ (_ mkString)
 
+  def float: Matcher[String] =
+    t(
+      string(
+        digits ~ '.' ~ digits ~ optExponent |
+          '.' ~ digits ~ optExponent |
+          digits ~ exponent))
+
   def integerLit: Matcher[Int] = t(digits) ^^ (_.toInt)
 
-  def floatLit: Matcher[lang.Double] =
-    t(
-      digits ~ '.' ~ digits ~ optExponent ^^ {
-        case intPart ~ _ ~ fracPart ~ exp =>
-          java.lang.Double.valueOf(s"$intPart.$fracPart$exp")
-      } |
-        '.' ~ digits ~ optExponent ^^ {
-          case _ ~ fracPart ~ exp => java.lang.Double.valueOf(s".$fracPart$exp")
-        } |
-        digits ~ exponent ^^ {
-          case intPart ~ exp => java.lang.Double.valueOf(intPart + exp)
-        })
+  def doubleLit: Matcher[Double] = float ^^ (_.toDouble)
+
+  def numberLit: Matcher[Number] =
+    float ^^ { s =>
+      val d = BigDecimal(s)
+
+      if (d.isValidInt) d.toInt
+      else if (d.isWhole) d.toBigInt
+      else d.toDouble
+    }
 
   private def exponent = (ch('e') | 'E') ~ opt(ch('+') | '-') ~ digits ^^ {
     case e ~ None ~ exp    => List(e, exp) mkString
