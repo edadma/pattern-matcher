@@ -193,6 +193,24 @@ trait Matchers[Input <: CharReader] {
     case (s, e) => s substring e
   }
 
+  def tap[S](name: String)(m: => Matcher[S]): Matcher[S] = {
+    lazy val m1 = m
+
+    { in =>
+      val result = m1(in)
+
+      println(s"$in $name >>>")
+
+      result match {
+        case Match(result, next) =>
+          println(s"$in $name <<< match $result $next")
+        case Mismatch(msg, next) => println(s"$in $name <<< fail")
+      }
+
+      result
+    }
+  }
+
   /**
     * Returns capture group.
     *
