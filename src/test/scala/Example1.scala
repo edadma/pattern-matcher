@@ -5,6 +5,8 @@ object Example1 extends /*App with*/ Matchers[CharReader] {
 
   delimiters ++= List( "+", "-", "*", "/", "(", ")" )
 
+  override def keyword(s: String ): Matcher[String] = ???
+
   def input: Example1.Matcher[Int] = matchall(expression)
 
   def additive: Matcher[(Int, Int) => Int] = ("+" | "-") ^^ {
