@@ -197,9 +197,9 @@ trait Matchers[Input <: CharReader] {
     lazy val m1 = m
 
     { in =>
-      val result = m1(in)
-
       println(s"$in $name >>>")
+
+      val result = m1(in)
 
       result match {
         case Match(result, next) =>
