@@ -336,20 +336,23 @@ trait Matchers[Input <: CharReader] {
     * @tparam S the type of the result value
     * @return the new matcher
     */
-  def guard[S](m: => Matcher[S]): Matcher[S] = { in =>
-    m(in) match {
-      case Match(r, _) => Match(r, in)
-      case f           => f
+  def guard[S](m: => Matcher[S]): Matcher[S] = {
+    lazy val m1 = m
+
+    { in =>
+      m1(in) match {
+        case Match(r, _) => Match(r, in)
+        case f           => f
+      }
     }
   }
 
   def pos: Matcher[Input] = in => Match(in, in)
 
-//  def pos: Matcher[Input] = { in =>
-//    whitespace( in ) match {
-//      case Match( _, in1 ) => Match( in1, in1 )
-//    }
-//  }
+  def affect(affect: CharReader => Unit): Matcher[Unit] = { in =>
+    affect(in)
+    Match((), in)
+  }
 
   /**
     * Returns a zero-length matcher that succeeds at the start of input.
@@ -533,19 +536,19 @@ trait Matchers[Input <: CharReader] {
       }
   }
 
-  val lineComment: Matcher[_] = '/' ~ '/'
+  def lineComment: Matcher[_] = '/' ~ '/'
+
+  def blockCommentStart: Matcher[_] = '/' ~ '*'
+
+  def blockCommentEnd: Matcher[_] = '*' ~ '/'
 
   def whitespace: Matcher[Unit] =
     repu(
       space |
-        lineComment ~ repu(noneOf('\n', CharReader.EOI)) |
-        '/' ~ '*' ~ comment |
-        '/' ~ '*' ~ fail("unclosed comment")
+        lineComment ~ repu(noneOf('\n')) |
+        blockCommentStart ~ repu(not(blockCommentEnd) ~> char) <~ blockCommentEnd |
+        blockCommentStart ~ fail("unclosed comment")
     )
-
-  def comment: Matcher[Unit] =
-    repu(noneOf('*', CharReader.EOI)) <~ '*' ~ '/' |
-      repu(noneOf('*', CharReader.EOI)) <~ '*' ~ comment
 
   def t[S](m: => Matcher[S]): Matcher[S] = whitespace ~> m <~ whitespace
 

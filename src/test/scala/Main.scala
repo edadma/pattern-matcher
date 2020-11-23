@@ -6,9 +6,9 @@ object Main extends App with Matchers[CharReader] {
   //reserved += ()
   //delimiters += ()
 
-  def input = matchall(rep(char))
+  def input = matchall(rep(whitespace ~> char <~ whitespace))
 
-  val s = "a"
+  val s = "a /* asdf* */ b"
 //    """
 //      |'asdf'
 //    """.stripMargin
@@ -19,6 +19,7 @@ object Main extends App with Matchers[CharReader] {
   }
 
 }
+
 //  val matcher =
 //    new Matchers[StringReader] {
 //      delimiters += ("+", "-", "*", "/", "(", ")")
