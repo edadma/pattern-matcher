@@ -373,7 +373,7 @@ trait Matchers[Input <: CharReader] {
     */
   def eoi: Matcher[Unit] =
     in =>
-      if (in.none)
+      if (in.eoi)
         Match((), in)
       else
         Mismatch("expected end of input", in)
@@ -402,7 +402,7 @@ trait Matchers[Input <: CharReader] {
     */
   def elem(pred: Char => Boolean,
            msg: String = "not in character class"): Matcher[Char] = { in =>
-    if (in.some && pred(in.ch))
+    if (in.more && pred(in.ch))
       Match(in.ch, in.next.asInstanceOf[Input])
     else
       Mismatch(msg, in)
@@ -449,7 +449,7 @@ trait Matchers[Input <: CharReader] {
     @scala.annotation.tailrec
     def str(idx: Int, in1: Input): MatcherResult[String] =
       if (idx < s.length)
-        if (in1.some && s.charAt(idx) == in1.ch)
+        if (in1.more && s.charAt(idx) == in1.ch)
           str(idx + 1, in1.next.asInstanceOf[Input])
         else
           Mismatch(s"expected '$s'", in)
@@ -592,8 +592,8 @@ trait Matchers[Input <: CharReader] {
   def lookbehind(pred: Char => Boolean,
                  msg: String = "not in character class"): Matcher[Char] = {
     in =>
-      if (!in.soi && pred(in.prev))
-        Match(in.prev, in)
+      if (!in.soi && pred(in.prev.get))
+        Match(in.prev.get, in)
       else
         Mismatch(msg, in)
   }
