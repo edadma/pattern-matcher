@@ -1,6 +1,6 @@
 name := "pattern-matcher"
 
-version := "0.3.13"
+version := "0.3.14"
 
 scalaVersion := "2.13.4"
 
@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
 //)
 
 libraryDependencies ++= Seq(
-  "xyz.hyperreal" %% "char-reader" % "0.1.3"
+  "xyz.hyperreal" %% "char-reader" % "0.1.4"
 )
 
 coverageExcludedPackages := ".*Main"
