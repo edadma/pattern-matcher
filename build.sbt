@@ -1,6 +1,6 @@
 name := "pattern-matcher"
 
-version := "0.3.14"
+version := "0.3.15"
 
 scalaVersion := "2.13.4"
 
@@ -24,16 +24,12 @@ libraryDependencies ++= Seq(
 //)
 
 libraryDependencies ++= Seq(
-  "xyz.hyperreal" %% "char-reader" % "0.1.4"
+  "xyz.hyperreal" %% "char-reader" % "0.1.5"
 )
 
 coverageExcludedPackages := ".*Main"
 
 mainClass in (Compile, run) := Some( "xyz.hyperreal." + name.value.replace('-', '_') + ".Main" )
-
-mainClass in assembly := Some( "xyz.hyperreal." + name.value.replace('-', '_') + ".Main" )
-
-assemblyJarName in assembly := name.value + "-" + version.value + ".jar"
 
 publishMavenStyle := true
 
