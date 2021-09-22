@@ -1,39 +1,28 @@
 name := "pattern-matcher"
 
-version := "0.3.15"
+version := "0.1.0"
 
-scalaVersion := "2.13.4"
+scalaVersion := "2.13.6"
 
 scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials", "-language:reflectiveCalls" )
 
-organization := "xyz.hyperreal"
+organization := "io.github.edadma"
 
-//resolvers += Resolver.sonatypeRepo( "snapshots" )
+githubOwner := "edadma"
 
-resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
+githubRepository := name.value
 
-resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
-
-libraryDependencies ++= Seq(
-	"org.scalatest" %% "scalatest" % "3.0.8" % "test",
-	"org.scalacheck" %% "scalacheck" % "1.14.0" % "test"
-)
-
-//libraryDependencies ++= Seq(
-//  "com.typesafe" % "config" % "1.3.3"
-//)
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test"
 
 libraryDependencies ++= Seq(
-  "xyz.hyperreal" %% "char-reader" % "0.1.5"
+  "io.github.edadma" %% "char-reader" % "0.1.3"
 )
 
-coverageExcludedPackages := ".*Main"
-
-mainClass in (Compile, run) := Some( "xyz.hyperreal." + name.value.replace('-', '_') + ".Main" )
+mainClass := Some(s"${organization.value}.${name.value}.Main")
 
 publishMavenStyle := true
 
-publishArtifact in Test := false
+Test / publishArtifact := false
 
 pomIncludeRepository := { _ => false }
 

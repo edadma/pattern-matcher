@@ -1,7 +1,8 @@
-import xyz.hyperreal.char_reader.CharReader
-import xyz.hyperreal.pattern_matcher._
+package io.github.edadma.pattern_matcher
 
-object Example1 extends /*App with*/ Matchers[CharReader] {
+import io.github.edadma.char_reader.CharReader
+
+object Example1 extends App with Matchers[CharReader] {
 
   delimiters ++= List("+", "-", "*", "/", "(", ")")
 
@@ -14,7 +15,7 @@ object Example1 extends /*App with*/ Matchers[CharReader] {
 
   def sign: Matcher[Int => Int] = opt("+" | "-") ^^ {
     case Some("-") => -_
-    case _         => identity
+    case _ => identity
   }
 
   def multiplicative: Matcher[(Int, Int) => Int] = ("*" | "/") ^^ {
@@ -35,7 +36,7 @@ object Example1 extends /*App with*/ Matchers[CharReader] {
   def run(s: String): Unit =
     input(CharReader.fromString(s)) match {
       case Match(result, _) => println(result)
-      case m: Mismatch      => m.error
+      case m: Mismatch => Console.err.println(m.errorString)
     }
 
   run("-3 + 4 * (-5)")

@@ -16,7 +16,7 @@ Example 1
 Here is an example expression parser.
 
 ```scala
-import xyz.hyperreal.pattern_matcher._
+import io.github.edadma.pattern_matcher._
 
 object Example1 extends App with Matchers[StringReader] {
 
@@ -79,7 +79,7 @@ Example 2
 As a longer example, here is an implementation (in under 160 lines of code) of Niklaus Wirth's PL/0 programming language from his 1976 book, "Algorithms + Data Structures = Programs".
 
 ```scala
-import xyz.hyperreal.pattern_matcher._
+import io.github.edadma.pattern_matcher._
 
 object Example2 extends App with Matchers[StringReader] {
 
@@ -292,7 +292,7 @@ Use the following definition to use *pattern-matcher* in your Maven project:
 </repository>
 
 <dependency>
-  <groupId>xyz.hyperreal</groupId>
+  <groupId>io.github.edadma</groupId>
   <artifactId>pattern-matcher</artifactId>
   <version>0.3.1</version>
 </dependency>
@@ -303,7 +303,7 @@ Add the following to your `build.sbt` file to use Backslash in your SBT project:
 ```sbt
 resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
-libraryDependencies += "xyz.hyperreal" %% "pattern-matcher" % "0.3.1"
+libraryDependencies += "io.github.edadma" %% "pattern-matcher" % "0.3.1"
 ```
 
 Building
