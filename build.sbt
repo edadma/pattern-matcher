@@ -1,6 +1,6 @@
 name := "pattern-matcher"
 
-version := "0.1.0"
+version := "0.1.1"
 
 scalaVersion := "2.13.6"
 
@@ -15,7 +15,7 @@ githubRepository := name.value
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test"
 
 libraryDependencies ++= Seq(
-  "io.github.edadma" %% "char-reader" % "0.1.3"
+  "io.github.edadma" %% "char-reader" % "0.1.4"
 )
 
 mainClass := Some(s"${organization.value}.${name.value}.Main")
