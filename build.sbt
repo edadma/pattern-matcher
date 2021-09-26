@@ -1,44 +1,38 @@
-name := "pattern-matcher"
+ThisBuild / licenses += "ISC" -> url("https://opensource.org/licenses/ISC")
+ThisBuild / versionScheme := Some("semver-spec")
 
-version := "0.1.1"
-
-scalaVersion := "2.13.6"
-
-scalacOptions ++= Seq( "-deprecation", "-feature", "-unchecked", "-language:postfixOps", "-language:implicitConversions", "-language:existentials", "-language:reflectiveCalls" )
-
-organization := "io.github.edadma"
-
-githubOwner := "edadma"
-
-githubRepository := name.value
-
-libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test"
-
-libraryDependencies ++= Seq(
-  "io.github.edadma" %% "char-reader" % "0.1.4"
-)
-
-mainClass := Some(s"${organization.value}.${name.value}.Main")
-
-publishMavenStyle := true
-
-Test / publishArtifact := false
-
-pomIncludeRepository := { _ => false }
-
-licenses := Seq("ISC" -> url("https://opensource.org/licenses/ISC"))
-
-homepage := Some(url("https://github.com/edadma/" + name.value))
-
-pomExtra :=
-  <scm>
-    <url>git@github.com:edadma/{name.value}.git</url>
-    <connection>scm:git:git@github.com:edadma/{name.value}.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>edadma</id>
-      <name>Edward A. Maxedon, Sr.</name>
-      <url>https://github.com/edadma</url>
-    </developer>
-  </developers>
+lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file(".")).
+  settings(
+    name := "pattern-matcher",
+    version := "0.1.2",
+    scalaVersion := "2.13.6",
+    scalacOptions ++=
+      Seq(
+        "-deprecation", "-feature", "-unchecked",
+        "-language:postfixOps", "-language:implicitConversions", "-language:existentials", "-language:dynamics",
+        "-Xasync"
+      ),
+    organization := "io.github.edadma",
+    githubOwner := "edadma",
+    githubRepository := name.value,
+    mainClass := Some(s"${organization.value}.${name.value}.Main"),
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % "test",
+    libraryDependencies += "io.github.edadma" %%% "char-reader" % "0.1.4",
+    publishMavenStyle := true,
+    Test / publishArtifact := false,
+    licenses += "ISC" -> url("https://opensource.org/licenses/ISC")
+  ).
+  jvmSettings(
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.0.0" % "provided",
+  ).
+  nativeSettings(
+    nativeLinkStubs := true
+  ).
+  jsSettings(
+    jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
+    //    Test / scalaJSUseMainModuleInitializer := true,
+    //    Test / scalaJSUseTestModuleInitializer := false,
+    Test / scalaJSUseMainModuleInitializer := false,
+    Test / scalaJSUseTestModuleInitializer := true,
+    scalaJSUseMainModuleInitializer := true,
+  )
