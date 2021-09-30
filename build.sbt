@@ -4,7 +4,7 @@ ThisBuild / versionScheme := Some("semver-spec")
 lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file(".")).
   settings(
     name := "pattern-matcher",
-    version := "0.1.2",
+    version := "0.1.3",
     scalaVersion := "2.13.6",
     scalacOptions ++=
       Seq(
@@ -17,7 +17,7 @@ lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     githubRepository := name.value,
     mainClass := Some(s"${organization.value}.${name.value}.Main"),
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % "test",
-    libraryDependencies += "io.github.edadma" %%% "char-reader" % "0.1.4",
+    libraryDependencies += "io.github.edadma" %%% "char-reader" % "0.1.5",
     publishMavenStyle := true,
     Test / publishArtifact := false,
     licenses += "ISC" -> url("https://opensource.org/licenses/ISC")
