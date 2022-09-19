@@ -4,28 +4,62 @@ import io.github.edadma.char_reader.CharReader
 
 import scala.annotation.tailrec
 
-object Example2 extends App with Matchers[CharReader] {
+@main def Example2(): Unit =
+  Example2Parser.run(
+    """
+      |const max = 20;
+      |var arg, ret;
+      |
+      |procedure isprime;
+      |var i;
+      |begin
+      |  ret := 1;
+      |  i := 2;
+      |  while arg / (i * i) > 0 do begin
+      |    if arg / i * i = arg then begin
+      |      ret := 0;
+      |      i := arg
+      |    end;
+      |    i := i + 1
+      |  end
+      |end;
+      |
+      |procedure primes;
+      |begin
+      |  arg := 2;
+      |  while arg < max do begin
+      |    call isprime;
+      |    if ret = 1 then !arg;
+      |    arg := arg + 1
+      |  end
+      |end;
+      |
+      |call primes.
+    """.stripMargin
+  )
+
+object Example2Parser extends Matchers[CharReader] {
 
   reserved ++= List("const", "var", "procedure", "odd", "begin", "end", "if", "then", "while", "do", "call")
   delimiters ++= List("+", "-", "*", "/", "(", ")", ";", ",", ".", ":=", "=", "#", "<", "<=", ">", ">=", "!")
 
-  def program: Example2.Matcher[Block] = matchall(block <~ ".")
+  def program: Example2Parser.Matcher[Block] = matchall(block <~ ".")
 
-  def const: Example2.Matcher[(String, (CharReader, Int))] = pos ~ ident ~ "=" ~ integerLit ^^ {
+  def const: Example2Parser.Matcher[(String, (CharReader, Int))] = pos ~ ident ~ "=" ~ integerLit ^^ {
     case p ~ n ~ _ ~ v => n -> (p, v)
   }
 
-  def consts: Example2.Matcher[List[(String, (CharReader, Int))]] = opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
+  def consts: Example2Parser.Matcher[List[(String, (CharReader, Int))]] = opt("const" ~> rep1sep(const, ",") <~ ";") ^^ {
     case None => Nil
     case Some(l) => l
   }
 
-  def vari: Example2.Matcher[(String, (CharReader, Var))] = pos ~ ident ~ opt("=" ~> integerLit) ^^ {
+  def vari: Example2Parser.Matcher[(String, (CharReader, Var))] = pos ~ ident ~ opt("=" ~> integerLit) ^^ {
     case p ~ n ~ None => n -> (p, new Var(0))
     case p ~ n ~ Some(v) => n -> (p, new Var(v))
   }
 
-  def vars: Example2.Matcher[List[(String, (CharReader, Var))]] = opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
+  def vars: Example2Parser.Matcher[List[(String, (CharReader, Var))]] = opt("var" ~> rep1sep(vari, ",") <~ ";") ^^ {
     case None => Nil
     case Some(l) => l
   }
@@ -34,7 +68,7 @@ object Example2 extends App with Matchers[CharReader] {
     case _ ~ p ~ n ~ _ ~ b ~ _ => n -> (p, b)
   }
 
-  def block: Example2.Matcher[Block] = consts ~ vars ~ rep(proc) ~ statement ^^ {
+  def block: Example2Parser.Matcher[Block] = consts ~ vars ~ rep(proc) ~ statement ^^ {
     case c ~ v ~ p ~ s => Block(c ++ v ++ p, s)
   }
 
@@ -46,7 +80,7 @@ object Example2 extends App with Matchers[CharReader] {
       "if" ~ condition ~ "then" ~ statement ^^ { case _ ~ c ~ _ ~ s => If(c, s) } |
       "while" ~ condition ~ "do" ~ statement ^^ { case _ ~ c ~ _ ~ s => While(c, s) }
 
-  def condition: Example2.Matcher[Condition] =
+  def condition: Example2Parser.Matcher[Condition] =
     "odd" ~> expression ^^ Odd |
       expression ~ ("=" | "#" | "<" | "<=" | ">" | ">=") ~ expression ^^ { case l ~ c ~ r => Comparison(l, c, r) }
 
@@ -55,11 +89,11 @@ object Example2 extends App with Matchers[CharReader] {
     case _ ~ t ~ l => (l foldLeft (Negate(t): Expression)) { case (x, o ~ y) => Operation(x, o, y) }
   }
 
-  def term: Example2.Matcher[Expression] = factor ~ rep(("*" | "/") ~ factor) ^^ {
+  def term: Example2Parser.Matcher[Expression] = factor ~ rep(("*" | "/") ~ factor) ^^ {
     case f ~ l => (l foldLeft f) { case (x, o ~ y) => Operation(x, o, y) }
   }
 
-  def factor: Example2.Matcher[Expression] =
+  def factor: Example2Parser.Matcher[Expression] =
     pos ~ ident ^^ { case p ~ v => Ident(p, v) } |
       integerLit ^^ Number |
       "(" ~> expression <~ ")"
@@ -167,38 +201,5 @@ object Example2 extends App with Matchers[CharReader] {
   case class Number(n: Int) extends Expression
 
   case class Ident(pos: CharReader, name: String) extends Expression
-
-  run(
-    """
-      |const max = 20;
-      |var arg, ret;
-      |
-      |procedure isprime;
-      |var i;
-      |begin
-      |  ret := 1;
-      |  i := 2;
-      |  while arg / (i * i) > 0 do begin
-      |    if arg / i * i = arg then begin
-      |      ret := 0;
-      |      i := arg
-      |    end;
-      |    i := i + 1
-      |  end
-      |end;
-      |
-      |procedure primes;
-      |begin
-      |  arg := 2;
-      |  while arg < max do begin
-      |    call isprime;
-      |    if ret = 1 then !arg;
-      |    arg := arg + 1
-      |  end
-      |end;
-      |
-      |call primes.
-    """.stripMargin
-  )
 
 }

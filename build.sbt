@@ -16,7 +16,6 @@ lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     organization := "io.github.edadma",
     githubOwner := "edadma",
     githubRepository := name.value,
-    mainClass := Some(s"${organization.value}.${name.value}.Main"),
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.13" % "test",
     libraryDependencies += "io.github.edadma" %%% "char-reader" % "0.1.11",
     publishMavenStyle := true,
