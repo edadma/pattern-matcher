@@ -5,7 +5,7 @@ Pattern Matcher
 [![Build status](https://ci.appveyor.com/api/projects/status/h5b23n2vd0k4oh9q/branch/master?svg=true)](https://ci.appveyor.com/project/edadma/pattern-matcher/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/edadma/pattern-matcher/badge.svg?branch=master)](https://coveralls.io/github/edadma/pattern-matcher?branch=master)
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](https://github.com/edadma/pattern-matcher/blob/master/LICENSE)
-[![Version](https://img.shields.io/badge/latest_release-v0.1.3-orange.svg)](https://github.com/edadma/pattern-matcher/releases/tag/v0.1.3)
+[![Version](https://img.shields.io/badge/latest_release-v0.1.6-orange.svg)](https://github.com/edadma/pattern-matcher/releases/tag/v0.1.6)
 
 *`pattern-matcher`* is a small combinator parsing library written in Scala mainly as a learning experience. For serious parsing needs, it is recommended to use Scala's `scala-parser-combinators` library.
 
@@ -296,6 +296,10 @@ import scala.annotation.tailrec
 3
 5
 7
+11
+13
+17
+19
 ```
 
 
@@ -324,7 +328,7 @@ Add the following to your `build.sbt` file to use Backslash in your SBT project:
 ```sbt
 resolvers += "Hyperreal Repository" at "https://dl.bintray.com/edadma/maven"
 
-libraryDependencies += "io.github.edadma" %% "pattern-matcher" % "0.1.3"
+libraryDependencies += "io.github.edadma" %% "pattern-matcher" % "0.1.6"
 ```
 
 Building
