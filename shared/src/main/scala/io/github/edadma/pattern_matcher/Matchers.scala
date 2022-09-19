@@ -50,7 +50,7 @@ trait Matchers[Input <: CharReader] {
     *
     * @param next character at which the mismatch occurred
     */
-  case class Mismatch(msg: String, next: Input) extends MatcherResult {
+  case class Mismatch(msg: String, next: Input) extends MatcherResult[Nothing] {
     def map[S](f: Nothing => S): MatcherResult[S] = this
 
     def errorString: String = next.longErrorText(msg)
@@ -126,7 +126,7 @@ trait Matchers[Input <: CharReader] {
 
       { in =>
         this (in) match {
-          case res: Match[R] => res
+          case res: Match[_] => res
           case _ => m1(in)
         }
       }
@@ -518,7 +518,7 @@ trait Matchers[Input <: CharReader] {
 
   def delimiter: Matcher[String] = t(_delim)
 
-  implicit def keyword(s: String): Matcher[String] = { in: Input =>
+  implicit def keyword(s: String): Matcher[String] = { (in: Input) =>
     if (!reserved.contains(s) && !delimiters.contains(s))
       in.error(s"not reserved: $s")
     else
