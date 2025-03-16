@@ -87,3 +87,11 @@ lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     Test / scalaJSUseTestModuleInitializer := true,
     scalaJSUseMainModuleInitializer := true,
   )
+
+lazy val root = project
+  .in(file("."))
+  .aggregate(pattern_matcher.js, pattern_matcher.jvm, pattern_matcher.native)
+  .settings(
+    publish / skip := true,
+    publishLocal / skip := true,
+  )
