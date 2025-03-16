@@ -7,17 +7,15 @@ lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   settings(
     name := "pattern-matcher",
     version := "0.1.6",
-    scalaVersion := "3.2.0",
+    scalaVersion := "3.6.4",
     scalacOptions ++=
       Seq(
         "-deprecation", "-feature", "-unchecked",
         "-language:postfixOps", "-language:implicitConversions", "-language:existentials", "-language:dynamics",
       ),
     organization := "io.github.edadma",
-    githubOwner := "edadma",
-    githubRepository := name.value,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.13" % "test",
-    libraryDependencies += "io.github.edadma" %%% "char-reader" % "0.1.11",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % "test",
+    libraryDependencies += "io.github.edadma" %%% "char-reader" % "0.1.19",
     publishMavenStyle := true,
     Test / publishArtifact := false,
     licenses += "ISC" -> url("https://opensource.org/licenses/ISC")
@@ -26,7 +24,7 @@ lazy val pattern_matcher = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.1.0" % "provided",
   ).
   nativeSettings(
-    nativeLinkStubs := true
+    libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "1.1.0" % "provided",
   ).
   jsSettings(
     jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(),
